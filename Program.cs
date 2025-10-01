@@ -16,168 +16,164 @@ CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Ite
 });
 availableRecipes.Add(armorRecipe);
 
-// --- PLAYER CREATION ---
+// --- WORLD AND PLAYER CREATION ---
+DungeonGenerator generator = new DungeonGenerator();
+Room startingRoom = generator.Generate(10); // Generate a 10-room dungeon
 Player player = new Player("Hero", 50, 10, 5); //Name, Health, Strength, Dexterity
+player.CurrentRoom = startingRoom; // Place player in origin room
+DescribeRoom(player);
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-
-// --- MAIN GAME LOOP ---
+// --- EXPLORATION GAME LOOP ---
 while (true)
 {
-    Console.WriteLine("\nYou are in the safe camp. What do you do?");
-    Console.WriteLine("- explore");
-    Console.WriteLine("- craft");
-    Console.WriteLine("- stats/char");
-    Console.WriteLine("- examine/x (check an item in your inventory)");
-    Console.WriteLine("- quit");
-    Console.Write("> ");
+    Console.Write("\n> ");
     string? choice = Console.ReadLine();
 
-    // String safety check, making sure choice does not have a null vaue passed to it
     if (string.IsNullOrEmpty(choice))
     {
         Console.WriteLine("Please enter a command.");
-        continue; // Restart the loop
+        continue;
     }
 
-    if (choice == "explore")
-    {
-        // When the player explores, a battle begins
-        bool playerWon = StartCombat(player, goblinHide);
-        if (!playerWon)
-        {
-            Console.WriteLine("Game Over");
-            break; // Exit the main game loop if the player dies.
-        }
-    }
-    else if (choice == "craft")
-    {
-        // --- CRAFTING LOOP ---
-        while (true)
-        {
-            Console.WriteLine("\n--- SAFE AREA ---");
-            Console.WriteLine("you can now craft. Options:");
-            Console.WriteLine("- craft leather armor");
-            Console.WriteLine("- i (view inventory)");
-            Console.WriteLine("- leave");
-            Console.Write("> ");
-            string? craftingChoice = Console.ReadLine();
+    // Split the input into words to get the command verb
+    string[] words = choice.ToLower().Split(' ');
+    string verb = words[0];
 
-            if (string.IsNullOrEmpty(craftingChoice)) continue;
-
-            if (craftingChoice.Equals("leave", StringComparison.OrdinalIgnoreCase))
+    // The new command parser
+    switch (verb)
+    {
+        case "north":
+        case "south":
+        case "east":
+        case "west":
+            switch (verb)
             {
-                Console.WriteLine("You leave the area, ready for the next adventure");
-                break; // Exists crafting loop
-            }
-            else if (craftingChoice.Equals("i", StringComparison.OrdinalIgnoreCase) || craftingChoice.Equals("inventory", StringComparison.OrdinalIgnoreCase))
-            {
-                // display player inventory
-                if (player.Inventory.Any())
-                {
-                    Console.WriteLine("\nInventory");
-                    foreach (var item in player.Inventory)
+                case "north":
+                    if (player.CurrentRoom.North != null)
                     {
-                        Console.WriteLine($"- {item.Name}");
+                        player.CurrentRoom = player.CurrentRoom.North;
+                        DescribeRoom(player);
                     }
-                }
-                else
-                {
-                    Console.WriteLine("\nYour inventory is empty");
-                }
-            }
-            else if (craftingChoice.StartsWith("craft ", StringComparison.OrdinalIgnoreCase))
-            {
-                // --- CRAFTING LOGIC ---
-                string itemToCraftName = craftingChoice.Substring(6);
-
-                // Find the recipe
-                CraftingRecipe? recipe = availableRecipes.Find(r => r.ResultingItem.Name.Equals(itemToCraftName, StringComparison.OrdinalIgnoreCase));
-
-                if (recipe == null)
-                {
-                    Console.WriteLine("You don't know how to craft that.");
-                    continue;
-                }
-                // Check if player has the required materials
-                bool canCraft = true;
-                foreach (var material in recipe.RequiredMaterials)
-                {
-                    int materialCount = player.Inventory.Count(item => item.Name == material.Key.Name);
-                    if (materialCount < material.Value)
+                    else
                     {
-                        Console.WriteLine($"You don't have enough {material.Key.Name}. Required: {material.Value}, Have: {materialCount}");
-                        canCraft = false;
-                        break;
+                        Console.WriteLine("You can't go that way");
+                        Console.WriteLine("");
                     }
-                }
-                // If enough materials, craft the item
-                if (canCraft)
-                {
-                    // Consume materials
-                    foreach (var material in recipe.RequiredMaterials)
+                    break;
+                case "south":
+                    if (player.CurrentRoom.South != null)
                     {
-                        for (int i = 0; i < material.Value; i++)
-                        {
-                            Item itemToRemove = player.Inventory.First(item => item.Name == material.Key.Name);
-                            player.Inventory.Remove(itemToRemove);
-                        }
+                        player.CurrentRoom = player.CurrentRoom.South;
+                        DescribeRoom(player);
                     }
-                    // Add new item to inventory
-                    player.Inventory.Add(recipe.ResultingItem);
-                    Console.WriteLine($"Successfully crafted {recipe.ResultingItem.Name}!");
-                }
+                    else
+                    {
+                        Console.WriteLine("You can't go that way");
+                        Console.WriteLine("");
+                    }
+                    break;
+                case "east":
+                    if (player.CurrentRoom.East != null)
+                    {
+                        player.CurrentRoom = player.CurrentRoom.East;
+                        DescribeRoom(player);
+                    }
+                    else
+                    {
+                        Console.WriteLine("You can't go that way");
+                        Console.WriteLine("");
+                    }
+                    break;
+                case "west":
+                    if (player.CurrentRoom.West != null)
+                    {
+                        player.CurrentRoom = player.CurrentRoom.West;
+                        DescribeRoom(player);
+                    }
+                    else
+                    {
+                        Console.WriteLine("You can't go that way");
+                        Console.WriteLine("");
+                    }
+                    break;
             }
-        }
-    }
-    else if (choice == "stats" || choice == "char")
-    {
-        Console.WriteLine("\n--- Character Stats ---");
-        Console.WriteLine($" Name: {player.Name}");
-        Console.WriteLine($" Level: {player.Level}");
-        Console.WriteLine($" Experience: {player.Experience} / {player.ExperienceToNextLevel}");
-        Console.WriteLine($" Health: {player.Health} / {player.MaxHealth}");
-        Console.WriteLine("-----------------------");
-        Console.WriteLine(" Attributes:");
-        foreach (var stat in player.Stats)
-        {
-            Console.WriteLine($" - {stat.Key}: {stat.Value}");
-        }
-        Console.WriteLine("-----------------------");
-    }
-    else if (choice.StartsWith("examine ", StringComparison.OrdinalIgnoreCase) || choice.StartsWith("x ", StringComparison.OrdinalIgnoreCase))
-    {
-        string[] words = choice.Split(' ');
-        if (words.Length > 1)
-        {
-            string itemToExamineName = string.Join(" ", words.Skip(1));
-            Item? itemToExamine = player.Inventory.Find(item => item.Name.Equals(itemToExamineName, StringComparison.OrdinalIgnoreCase));
+            break;
 
-            if (itemToExamine != null)
+        case "look":
+        case "l":
+            DescribeRoom(player);
+            break;
+        
+        case "stats":
+        case "char":
+            Console.WriteLine("\n--- Character Stats ---");
+            Console.WriteLine($" Name: {player.Name}");
+            Console.WriteLine($" Level: {player.Level}");
+            Console.WriteLine($" Experience: {player.Experience} / {player.ExperienceToNextLevel}");
+            Console.WriteLine($" Health: {player.Health} / {player.MaxHealth}");
+            Console.WriteLine("-----------------------");
+            Console.WriteLine(" Attributes:");
+            foreach (var stat in player.Stats)
             {
-                Console.WriteLine($"\n{itemToExamine.Name}");
-                Console.WriteLine($"  {itemToExamine.Description}");
+                Console.WriteLine($" - {stat.Key}: {stat.Value}");
+            }
+            Console.WriteLine("-----------------------");
+            break;
+
+        case "inventory":
+        case "i":
+            // display player inventory
+            if (player.Inventory.Any())
+            {
+                Console.WriteLine("\nInventory");
+                foreach (var item in player.Inventory)
+                {
+                    Console.WriteLine($"- {item.Name}");
+                }
             }
             else
             {
-                Console.WriteLine($"You don't have a '{itemToExamineName}' in your inventory.");
+                Console.WriteLine("\nYour inventory is empty");
             }
-        }
-        else
-        {
-            Console.WriteLine("What do you want to examine?");
-        }
-    }
-    else if (choice == "quit")
-    {
-        Console.WriteLine("You decide to rest for now. Until next time!");
-        break;
+            break;
+
+        case "examine":
+        case "x":
+            if (words.Length > 1)
+            {
+                string itemToExamineName = string.Join(" ", words.Skip(1));
+                Item? itemToExamine = player.Inventory.Find(item => item.Name.Equals(itemToExamineName, StringComparison.OrdinalIgnoreCase));
+
+                if (itemToExamine != null)
+                {
+                    Console.WriteLine($"\n{itemToExamine.Name}");
+                    Console.WriteLine($"  {itemToExamine.Description}");
+                }
+                else
+                {
+                    Console.WriteLine($"You don't have a '{itemToExamineName}' in your inventory.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("What do you want to examine?");
+            }
+                break;
+
+        case "quit":
+            Console.WriteLine("You decide to rest for now. Until next time!");
+            return; // Use 'return' to exit the application from the main context.
+
+        default:
+            Console.WriteLine("I don't understand that command.");
+            break;
     }
 }
 
 // --- HELPER METHODS ---
 
-static bool StartCombat(Player player, Item LootItem)
+static bool StartCombat(Player player, Item LootItem) // Will be used in Main loop once combat is refactored as a random event in rooms
 {
     // Combatants
     Monster goblin = new Monster("Goblin", 20, 8, 3, 50, LootItem); // Name, Health, Strength, Dexterity, XP, Loot
@@ -246,4 +242,18 @@ static bool StartCombat(Player player, Item LootItem)
     {
         return false;
     }
+}
+
+void DescribeRoom(Player player)
+{
+    if (player.CurrentRoom == null)
+    {
+        Console.WriteLine("You are lost in a void...");
+        return;
+    }
+
+    Console.WriteLine($"\nLocation: {player.CurrentRoom.Name} ({player.CurrentRoom.X}, {player.CurrentRoom.Y})");
+    Console.WriteLine(player.CurrentRoom.Description);
+
+    //TODO: list added monsters and items when implemented
 }

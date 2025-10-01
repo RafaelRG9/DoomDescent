@@ -3,6 +3,7 @@ public class Player : Character
     public int Level { get; set; }
     public int Experience { get; set; }
     public int ExperienceToNextLevel { get; set; }
+    public Room? CurrentRoom { get; set; }
     public List<Item> Inventory { get; private set; }
 
     public Player(string name, int health, int strength, int dexterity)

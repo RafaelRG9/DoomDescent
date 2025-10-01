@@ -1,0 +1,25 @@
+public class Room
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    // Coordinates on the map grid
+    public int X { get; set; }
+    public int Y { get; set; }
+
+    // Connection to other rooms
+    public Room? North { get; set; }
+    public Room? South { get; set; }
+    public Room? East { get; set; }
+    public Room? West { get; set; }
+
+    // TODO: Add a list of Monsters and Items
+
+    public Room(int x, int y)
+    {
+        X = x;
+        Y = y;
+        Name = "Empty Room";
+        Description = "A dusty, featureless stone room.";
+    }
+}
