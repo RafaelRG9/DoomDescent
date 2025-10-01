@@ -2,6 +2,7 @@ public class Room
 {
     public string Name { get; set; }
     public string Description { get; set; }
+    public List<Monster> MonstersInRoom { get; set; }
 
     // Coordinates on the map grid
     public int X { get; set; }
@@ -21,5 +22,6 @@ public class Room
         Y = y;
         Name = "Empty Room";
         Description = "A dusty, featureless stone room.";
+        MonstersInRoom = new List<Monster>();
     }
 }

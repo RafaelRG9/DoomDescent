@@ -54,6 +54,18 @@ while (true)
                     {
                         player.CurrentRoom = player.CurrentRoom.North;
                         DescribeRoom(player);
+                        while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
+                        {
+                            // Get the next monster and start a fight.
+                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
+                            bool playerWon = StartCombat(player, monster);
+
+                            if (playerWon)
+                            {
+                                // If the player wins, remove the defeated monster from the room.
+                                player.CurrentRoom.MonstersInRoom.Remove(monster);
+                            }
+                        }
                     }
                     else
                     {
@@ -66,6 +78,19 @@ while (true)
                     {
                         player.CurrentRoom = player.CurrentRoom.South;
                         DescribeRoom(player);
+                        // Start Combat if it is a 'Monster' room
+                         while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
+                        {
+                            // Get the next monster and start a fight.
+                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
+                            bool playerWon = StartCombat(player, monster);
+
+                            if (playerWon)
+                            {
+                                // If the player wins, remove the defeated monster from the room.
+                                player.CurrentRoom.MonstersInRoom.Remove(monster);
+                            }
+                        }
                     }
                     else
                     {
@@ -78,6 +103,19 @@ while (true)
                     {
                         player.CurrentRoom = player.CurrentRoom.East;
                         DescribeRoom(player);
+                        // Start Combat if it is a 'Monster' room
+                         while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
+                        {
+                            // Get the next monster and start a fight.
+                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
+                            bool playerWon = StartCombat(player, monster);
+
+                            if (playerWon)
+                            {
+                                // If the player wins, remove the defeated monster from the room.
+                                player.CurrentRoom.MonstersInRoom.Remove(monster);
+                            }
+                        }
                     }
                     else
                     {
@@ -90,6 +128,19 @@ while (true)
                     {
                         player.CurrentRoom = player.CurrentRoom.West;
                         DescribeRoom(player);
+                        // Start Combat if it is a 'Monster' room
+                         while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
+                        {
+                            // Get the next monster and start a fight.
+                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
+                            bool playerWon = StartCombat(player, monster);
+
+                            if (playerWon)
+                            {
+                                // If the player wins, remove the defeated monster from the room.
+                                player.CurrentRoom.MonstersInRoom.Remove(monster);
+                            }
+                        }
                     }
                     else
                     {
@@ -173,20 +224,17 @@ while (true)
 
 // --- HELPER METHODS ---
 
-static bool StartCombat(Player player, Item LootItem) // Will be used in Main loop once combat is refactored as a random event in rooms
+static bool StartCombat(Player player,Monster monsterToFight) // Will be used in Main loop once combat is refactored as a random event in rooms
 {
-    // Combatants
-    Monster goblin = new Monster("Goblin", 20, 8, 3, 50, LootItem); // Name, Health, Strength, Dexterity, XP, Loot
-
-    Console.WriteLine($"{player.Name} encounters a fierce {goblin.Name}");
+    Console.WriteLine($"{player.Name} encounters a fierce {monsterToFight.Name}");
 
     // Turn-Based combat
-    while (player.Health > 0 && goblin.Health > 0)
+    while (player.Health > 0 && monsterToFight.Health > 0)
     {
         // Display Status
         Console.WriteLine("\n--------------------");
         Console.WriteLine($"{player.Name}: {player.Health}/{player.MaxHealth}");
-        Console.WriteLine($"{goblin.Name}: {goblin.Health}/{goblin.MaxHealth}");
+        Console.WriteLine($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
         Console.WriteLine("\n--------------------");
 
         // Request Player for Action
@@ -206,8 +254,8 @@ static bool StartCombat(Player player, Item LootItem) // Will be used in Main lo
         {
             // Calculate Damage
             int damageDealt = player.Stats["Strength"];
-            goblin.Health -= damageDealt;
-            Console.WriteLine($"You attack the {goblin.Name}, dealing {damageDealt} damage!");
+            monsterToFight.Health -= damageDealt;
+            Console.WriteLine($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!");
         }
         else
         {
@@ -215,11 +263,11 @@ static bool StartCombat(Player player, Item LootItem) // Will be used in Main lo
         }
 
         // Check if Monster still lives and calculate their attack
-        if (goblin.Health > 0)
+        if (monsterToFight.Health > 0)
         {
-            int damageTaken = goblin.Stats["Strength"];
+            int damageTaken = monsterToFight.Stats["Strength"];
             player.Health -= damageTaken;
-            Console.WriteLine($"The {goblin.Name} retaliates, dealing {damageTaken} damage to you!");
+            Console.WriteLine($"The {monsterToFight.Name} retaliates, dealing {damageTaken} damage to you!");
         }
     }
 
@@ -228,13 +276,13 @@ static bool StartCombat(Player player, Item LootItem) // Will be used in Main lo
     // Check for winners
     if (player.Health > 0)
     {
-        Console.WriteLine($"You defeated the {goblin.Name}!");
-        if (goblin.Loot != null)
+        Console.WriteLine($"You defeated the {monsterToFight.Name}!");
+        if (monsterToFight.Loot != null)
         {
-            Console.WriteLine($"You found a {goblin.Loot.Name}!");
-            player.Inventory.Add(goblin.Loot);
+            Console.WriteLine($"You found a {monsterToFight.Loot.Name}!");
+            player.Inventory.Add(monsterToFight.Loot);
         }
-        player.AddExperience(goblin.ExperienceValue);
+        player.AddExperience(monsterToFight.ExperienceValue);
 
         return true;
     }
@@ -255,5 +303,15 @@ void DescribeRoom(Player player)
     Console.WriteLine($"\nLocation: {player.CurrentRoom.Name} ({player.CurrentRoom.X}, {player.CurrentRoom.Y})");
     Console.WriteLine(player.CurrentRoom.Description);
 
-    //TODO: list added monsters and items when implemented
+    // --- MONSTER LIST ---
+    if (player.CurrentRoom.MonstersInRoom.Count > 0)
+    {
+        Console.WriteLine("\nDangerous creatures lurk here:");
+        foreach (Monster monster in player.CurrentRoom.MonstersInRoom)
+        {
+            Console.WriteLine($"- A fearsome {monster.Name}");
+        }
+    }
+
+    //TODO: list items when implemented
 }

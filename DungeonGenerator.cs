@@ -33,7 +33,7 @@ public class DungeonGenerator
                 case 3: nextX--; break; //  West
             }
 
-            string nextPositionKey = $@"{nextX}:{nextY}";
+            string nextPositionKey = $"{nextX},{nextY}";
             Room? nextRoom;
 
             // Check if a room already exists in the new coordinate.
@@ -44,6 +44,19 @@ public class DungeonGenerator
                 // Create a new room if it doesn't exists
                 nextRoom = new Room(nextX, nextY);
                 map.Add(nextPositionKey, nextRoom);
+
+                // --- MONSTER SPAWNING ---
+                if (_random.Next(100) < 50)
+                {
+                    // define loot, create monster, and add to room's list
+                    Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
+                    Monster goblin = new Monster("Goblin", 20, 8, 3, 50, goblinHide);
+                    nextRoom.MonstersInRoom.Add(goblin);
+
+                    // Update the room's description to mention the monster
+                    nextRoom.Name = "Monster Room";
+                    nextRoom.Description = "A foul smell hangs in the air. A Goblin glares at you!";
+                }
 
                 // Link the new room to the current room
                 switch (direction)
