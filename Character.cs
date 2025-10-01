@@ -1,0 +1,19 @@
+public abstract class Character
+{
+    public string Name { get; set; }
+    public int Health { get; set; }
+    public int MaxHealth { get; set; }
+    public Dictionary<string, int> Stats { get; private set; }
+
+    public Character(string name, int health, int strength, int dexterity)
+    {
+        Name = name;
+        MaxHealth = health;
+        Health = health;
+        Stats = new Dictionary<string, int>
+        {
+            {"Strength", strength},
+            {"Dexterity", dexterity}
+        };
+    }
+}
