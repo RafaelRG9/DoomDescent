@@ -28,9 +28,17 @@ while (true)
     Console.WriteLine("- explore");
     Console.WriteLine("- craft");
     Console.WriteLine("- stats/char");
+    Console.WriteLine("- examine/x (check an item in your inventory)");
     Console.WriteLine("- quit");
     Console.Write("> ");
     string? choice = Console.ReadLine();
+
+    // String safety check, making sure choice does not have a null vaue passed to it
+    if (string.IsNullOrEmpty(choice))
+    {
+        Console.WriteLine("Please enter a command.");
+        continue; // Restart the loop
+    }
 
     if (choice == "explore")
     {
@@ -136,6 +144,29 @@ while (true)
             Console.WriteLine($" - {stat.Key}: {stat.Value}");
         }
         Console.WriteLine("-----------------------");
+    }
+    else if (choice.StartsWith("examine ", StringComparison.OrdinalIgnoreCase) || choice.StartsWith("x ", StringComparison.OrdinalIgnoreCase))
+    {
+        string[] words = choice.Split(' ');
+        if (words.Length > 1)
+        {
+            string itemToExamineName = string.Join(" ", words.Skip(1));
+            Item? itemToExamine = player.Inventory.Find(item => item.Name.Equals(itemToExamineName, StringComparison.OrdinalIgnoreCase));
+
+            if (itemToExamine != null)
+            {
+                Console.WriteLine($"\n{itemToExamine.Name}");
+                Console.WriteLine($"  {itemToExamine.Description}");
+            }
+            else
+            {
+                Console.WriteLine($"You don't have a '{itemToExamineName}' in your inventory.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("What do you want to examine?");
+        }
     }
     else if (choice == "quit")
     {
