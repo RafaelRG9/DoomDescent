@@ -1,12 +1,14 @@
 public class Player : Character
 {
-    public int level { get; set; }
+    public int Level { get; set; }
     public int Experience { get; set; }
+    public List<Item> Inventory { get; private set; }
 
     public Player(string name, int health, int strength, int dexterity)
-        : base(name, health, strength, desterity)
+        : base(name, health, strength, dexterity)
     {
-        level = 1;
+        Level = 1;
         Experience = 0;
+        Inventory = new List<Item>();
     }
 }
