@@ -27,6 +27,7 @@ while (true)
     Console.WriteLine("\nYou are in the safe camp. What do you do?");
     Console.WriteLine("- explore");
     Console.WriteLine("- craft");
+    Console.WriteLine("- stats/char");
     Console.WriteLine("- quit");
     Console.Write("> ");
     string? choice = Console.ReadLine();
@@ -77,10 +78,10 @@ while (true)
                     Console.WriteLine("\nYour inventory is empty");
                 }
             }
-            else if (choice.StartsWith("craft ", StringComparison.OrdinalIgnoreCase))
+            else if (craftingChoice.StartsWith("craft ", StringComparison.OrdinalIgnoreCase))
             {
                 // --- CRAFTING LOGIC ---
-                string itemToCraftName = choice.Substring(6);
+                string itemToCraftName = craftingChoice.Substring(6);
 
                 // Find the recipe
                 CraftingRecipe? recipe = availableRecipes.Find(r => r.ResultingItem.Name.Equals(itemToCraftName, StringComparison.OrdinalIgnoreCase));
@@ -121,6 +122,21 @@ while (true)
             }
         }
     }
+    else if (choice == "stats" || choice == "char")
+    {
+        Console.WriteLine("\n--- Character Stats ---");
+        Console.WriteLine($" Name: {player.Name}");
+        Console.WriteLine($" Level: {player.Level}");
+        Console.WriteLine($" Experience: {player.Experience} / {player.ExperienceToNextLevel}");
+        Console.WriteLine($" Health: {player.Health} / {player.MaxHealth}");
+        Console.WriteLine("-----------------------");
+        Console.WriteLine(" Attributes:");
+        foreach (var stat in player.Stats)
+        {
+            Console.WriteLine($" - {stat.Key}: {stat.Value}");
+        }
+        Console.WriteLine("-----------------------");
+    }
     else if (choice == "quit")
     {
         Console.WriteLine("You decide to rest for now. Until next time!");
@@ -133,7 +149,7 @@ while (true)
 static bool StartCombat(Player player, Item LootItem)
 {
     // Combatants
-    Monster goblin = new Monster("Goblin", 20, 8, 3, LootItem); // Name, Health, Strength, Dexterity, Loot
+    Monster goblin = new Monster("Goblin", 20, 8, 3, 50, LootItem); // Name, Health, Strength, Dexterity, XP, Loot
 
     Console.WriteLine($"{player.Name} encounters a fierce {goblin.Name}");
 
@@ -191,6 +207,7 @@ static bool StartCombat(Player player, Item LootItem)
             Console.WriteLine($"You found a {goblin.Loot.Name}!");
             player.Inventory.Add(goblin.Loot);
         }
+        player.AddExperience(goblin.ExperienceValue);
 
         return true;
     }
