@@ -50,103 +50,16 @@ while (true)
             switch (verb)
             {
                 case "north":
-                    if (player.CurrentRoom.North != null)
-                    {
-                        player.CurrentRoom = player.CurrentRoom.North;
-                        DescribeRoom(player);
-                        while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
-                        {
-                            // Get the next monster and start a fight.
-                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
-                            bool playerWon = StartCombat(player, monster);
-
-                            if (playerWon)
-                            {
-                                // If the player wins, remove the defeated monster from the room.
-                                player.CurrentRoom.MonstersInRoom.Remove(monster);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("You can't go that way");
-                        Console.WriteLine("");
-                    }
+                    MovePlayer(player.CurrentRoom.North);
                     break;
                 case "south":
-                    if (player.CurrentRoom.South != null)
-                    {
-                        player.CurrentRoom = player.CurrentRoom.South;
-                        DescribeRoom(player);
-                        // Start Combat if it is a 'Monster' room
-                         while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
-                        {
-                            // Get the next monster and start a fight.
-                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
-                            bool playerWon = StartCombat(player, monster);
-
-                            if (playerWon)
-                            {
-                                // If the player wins, remove the defeated monster from the room.
-                                player.CurrentRoom.MonstersInRoom.Remove(monster);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("You can't go that way");
-                        Console.WriteLine("");
-                    }
+                    MovePlayer(player.CurrentRoom.South);
                     break;
                 case "east":
-                    if (player.CurrentRoom.East != null)
-                    {
-                        player.CurrentRoom = player.CurrentRoom.East;
-                        DescribeRoom(player);
-                        // Start Combat if it is a 'Monster' room
-                         while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
-                        {
-                            // Get the next monster and start a fight.
-                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
-                            bool playerWon = StartCombat(player, monster);
-
-                            if (playerWon)
-                            {
-                                // If the player wins, remove the defeated monster from the room.
-                                player.CurrentRoom.MonstersInRoom.Remove(monster);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("You can't go that way");
-                        Console.WriteLine("");
-                    }
+                    MovePlayer(player.CurrentRoom.East);
                     break;
                 case "west":
-                    if (player.CurrentRoom.West != null)
-                    {
-                        player.CurrentRoom = player.CurrentRoom.West;
-                        DescribeRoom(player);
-                        // Start Combat if it is a 'Monster' room
-                         while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
-                        {
-                            // Get the next monster and start a fight.
-                            Monster monster = player.CurrentRoom.MonstersInRoom[0];
-                            bool playerWon = StartCombat(player, monster);
-
-                            if (playerWon)
-                            {
-                                // If the player wins, remove the defeated monster from the room.
-                                player.CurrentRoom.MonstersInRoom.Remove(monster);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("You can't go that way");
-                        Console.WriteLine("");
-                    }
+                    MovePlayer(player.CurrentRoom.West);
                     break;
             }
             break;
@@ -211,6 +124,36 @@ while (true)
                 Console.WriteLine("What do you want to examine?");
             }
                 break;
+        
+        case "take":
+            if (words.Length > 1)
+            {
+                string itemToTakeName = string.Join(" ", words.Skip(1));
+                Item? itemToTake = player.CurrentRoom.ItemsInRoom.Find(item => item.Name.Equals(itemToTakeName, StringComparison.OrdinalIgnoreCase));
+
+                if (itemToTake != null)
+                {
+                    player.Inventory.Add(itemToTake);
+                    Console.WriteLine($"You took the {itemToTake.Name}");
+                    player.CurrentRoom.ItemsInRoom.Remove(itemToTake);
+                }
+            }
+            break;
+
+            case "drop":
+            if (words.Length > 1)
+            {
+                string itemToDropName = string.Join(" ", words.Skip(1));
+                Item? itemToDrop = player.Inventory.Find(item => item.Name.Equals(itemToDropName, StringComparison.OrdinalIgnoreCase));
+
+                if (itemToDrop != null)
+                {
+                    player.Inventory.Remove(itemToDrop);
+                    Console.WriteLine($"You dropped the {itemToDrop.Name}");
+                    player.CurrentRoom.ItemsInRoom.Add(itemToDrop);
+                }
+            }
+            break;
 
         case "quit":
             Console.WriteLine("You decide to rest for now. Until next time!");
@@ -222,9 +165,11 @@ while (true)
     }
 }
 
+
+
 // --- HELPER METHODS ---
 
-static bool StartCombat(Player player,Monster monsterToFight) // Will be used in Main loop once combat is refactored as a random event in rooms
+static bool StartCombat(Player player, Monster monsterToFight) // Will be used in Main loop once combat is refactored as a random event in rooms
 {
     Console.WriteLine($"{player.Name} encounters a fierce {monsterToFight.Name}");
 
@@ -303,7 +248,7 @@ void DescribeRoom(Player player)
     Console.WriteLine($"\nLocation: {player.CurrentRoom.Name} ({player.CurrentRoom.X}, {player.CurrentRoom.Y})");
     Console.WriteLine(player.CurrentRoom.Description);
 
-    // --- MONSTER LIST ---
+    // --- MONSTER OR ITEM LIST ---
     if (player.CurrentRoom.MonstersInRoom.Count > 0)
     {
         Console.WriteLine("\nDangerous creatures lurk here:");
@@ -312,6 +257,44 @@ void DescribeRoom(Player player)
             Console.WriteLine($"- A fearsome {monster.Name}");
         }
     }
+    else
+    {
+        if (player.CurrentRoom.ItemsInRoom.Count > 0)
+        {
+            Console.WriteLine("\nYou found treasure in this room:");
+            foreach (Item item in player.CurrentRoom.ItemsInRoom)
+            {
+                Console.WriteLine($"- {item.Name}");
+            }
+        }
+    }
+}
 
-    //TODO: list items when implemented
+void MovePlayer(Room? newRoom)
+{
+    if (newRoom != null)
+    {
+        // Move Player
+        player.CurrentRoom = newRoom;
+        DescribeRoom(player);
+
+        // Trigger combat if it is a monster room
+        while (player.CurrentRoom.MonstersInRoom.Count > 0 && player.Health > 0)
+        {
+            Monster monster = player.CurrentRoom.MonstersInRoom[0];
+            bool playerWon = StartCombat(player, monster);
+            if (playerWon)
+            {
+                player.CurrentRoom.MonstersInRoom.Remove(monster);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        Console.WriteLine("You can't go that way.");
+    }
 }
