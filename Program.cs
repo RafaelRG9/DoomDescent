@@ -224,7 +224,7 @@ while (true)
 
 // --- HELPER METHODS ---
 
-static bool StartCombat(Player player, Monster monsterToFight) // Will be used in Main loop once combat is refactored as a random event in rooms
+static bool StartCombat(Player player, Monster monsterToFight)
 {
     Console.WriteLine($"{player.Name} encounters a fierce {monsterToFight.Name}");
 
@@ -252,8 +252,8 @@ static bool StartCombat(Player player, Monster monsterToFight) // Will be used i
         // Process Player's Action
         if (playerChoice.Equals("attack", StringComparison.OrdinalIgnoreCase))
         {
-            // Calculate Damage
-            int damageDealt = player.Stats["Strength"];
+            // Calculate damage based on player strength and weapon
+            int damageDealt = player.GetTotalStrength();
             monsterToFight.Health -= damageDealt;
             Console.WriteLine($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!");
         }
@@ -265,9 +265,20 @@ static bool StartCombat(Player player, Monster monsterToFight) // Will be used i
         // Check if Monster still lives and calculate their attack
         if (monsterToFight.Health > 0)
         {
-            int damageTaken = monsterToFight.Stats["Strength"];
-            player.Health -= damageTaken;
-            Console.WriteLine($"The {monsterToFight.Name} retaliates, dealing {damageTaken} damage to you!");
+            // Calculate damage to player based on monster strength and player defense
+            int monsterDamage = monsterToFight.Stats["Strength"];
+            int playerDefense = player.GetTotalDefense();
+            int damageToPlayer = monsterDamage - playerDefense;
+
+            // Ensure at least 1 damage is dealt
+            if (damageToPlayer < 1)
+            {
+                damageToPlayer = 1;
+            }
+
+            // Deal damage to player
+            player.Health -= damageToPlayer;
+            Console.WriteLine($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!");
         }
     }
 

@@ -3,20 +3,29 @@ public class DungeonGenerator
     // We create one Random object and reuse it for better randomness.
     private Random _random = new Random();
 
+    // List to hold all possible items that can spawn in rooms
+    private List<Item> _masterLootTable;
+
+    public DungeonGenerator()
+    {
+        _masterLootTable = new List<Item>();
+
+        // Populate the master loot table with some items
+        _masterLootTable.Add(new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!"));
+        _masterLootTable.Add(new Armor("Rusty Armor", "Well, better than nothing!", 2));
+        _masterLootTable.Add(new Weapon("Rusty Sword", "An old sword, as sharp as rolling pin!. At least it could give Tetanus", 2));
+        _masterLootTable.Add(new Item("Small Potion", "Wouldn't hurt to drink this, wouldn't help either"));
+    }
+
     public Room Generate(int numberOfRooms)
     {
-        // Dictionary to hold the entire map
+        // --- INITIALIZATION ---
         var map = new Dictionary<string, Room>();
-
-        // Create starting room at coordinates (0,0)
         Room currentRoom = new Room(0, 0);
         map.Add("0,0", currentRoom);
-
-        // Save first room as a reference to come back to it at the end
         Room startRoom = currentRoom;
 
         // --- MAIN LOOP ---
-        // Loop for 'numberOfRooms - 1' since room one is already created
         for (int i = 0; i < numberOfRooms - 1; i++)
         {
             // Choose a random direction (0=North, 1=East, 2=South, 3=West)
@@ -35,11 +44,8 @@ public class DungeonGenerator
 
             string nextPositionKey = $"{nextX},{nextY}";
             Room? nextRoom;
-            Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
 
-            // Check if a room already exists in the new coordinate.
-            // TryGetValue checks the dictionary and if the key exists,
-            // it will put the room in the nextRoom variable and return true
+            // Check if a room already exists at the new coordinates
             if (!map.TryGetValue(nextPositionKey, out nextRoom))
             {
                 // Create a new room if it doesn't exists
@@ -50,7 +56,8 @@ public class DungeonGenerator
                 if (_random.Next(100) < 50)
                 {
                     // define loot, create monster, and add to room's list
-                    Monster goblin = new Monster("Goblin", 20, 8, 3, 50, goblinHide);
+                    Item? goblinLoot = _masterLootTable.Find(item => item.Name == "Goblin Hide");
+                    Monster goblin = new Monster("Goblin", 20, 8, 3, 50, goblinLoot);
                     nextRoom.MonstersInRoom.Add(goblin);
 
                     // Update the room's description to mention the monster
@@ -59,10 +66,12 @@ public class DungeonGenerator
                 }
                 else
                 {
-                    nextRoom.ItemsInRoom.Add(goblinHide);
+                    int randomIndex = _random.Next(_masterLootTable.Count);
+                    Item lootItem = _masterLootTable[randomIndex];
+                    nextRoom.ItemsInRoom.Add(lootItem);
 
                     nextRoom.Name = "Treasure Room";
-                    nextRoom.Description = "Fortune favors you!";
+                    nextRoom.Description = $"Fortune favors you! There's a {lootItem.Name} here. GO GRAB IT!";
                 }
 
                 // Link the new room to the current room
@@ -86,8 +95,6 @@ public class DungeonGenerator
                         break;
                 }
             }
-
-            // Update walker's position to the new room, wether it is a new or existing room
             currentRoom = nextRoom;
         }
         // --- RETURN TO START ---

@@ -17,6 +17,38 @@ public class Player : Character
         Equipment = new Dictionary<EquipmentSlot, Item>();
     }
 
+    public int GetTotalStrength()
+    {
+        int totalStrength = Stats["Strength"];
+
+        // Check for an equipped weapon
+        if (Equipment.TryGetValue(EquipmentSlot.MainHand, out Item? equippedItem))
+        {
+            if (equippedItem is Weapon equippedWeapon)
+            {
+                // Add weapon's damage
+                totalStrength += equippedWeapon.Damage;
+            }
+        }
+        return totalStrength;
+    }
+
+    public int GetTotalDefense()
+    {
+        int totalDefense = 0;
+
+        // Check for an equipped armor
+        if (Equipment.TryGetValue(EquipmentSlot.Chest, out Item? equippedItem))
+        {
+            if (equippedItem is Armor equippedArmor)
+            {
+                // Add Armor's defense
+                totalDefense += equippedArmor.Defense;
+            }
+        }
+        return totalDefense;
+    }
+
     public void AddExperience(int experienceGained)
     {
         Experience += experienceGained;
