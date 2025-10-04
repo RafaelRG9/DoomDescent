@@ -229,7 +229,7 @@ while (true)
                         player.Health = player.MaxHealth; // Cap health at max health
                     }
                     player.Inventory.Remove(potion);
-                    Console.WriteLine($"You use the {potion.Name} and restore {potion.HealthToRestore} health. You now have {player.Health}/{player.MaxHealth} HP");
+                    PrintInColor($"You use the {potion.Name} and restore {potion.HealthToRestore} health. You now have {player.Health}/{player.MaxHealth} HP", ConsoleColor.Green);
                 }
                 else
                 {
@@ -255,8 +255,17 @@ while (true)
 
 // --- HELPER METHODS ---
 
+// Utility method to print text in a specific color
+static void PrintInColor(string text, ConsoleColor color)
+{
+    Console.ForegroundColor = color;
+    Console.WriteLine(text);
+    Console.ResetColor();
+}
+
 static bool StartCombat(Player player, Monster monsterToFight)
 {
+    Random random = new Random();
     Console.WriteLine($"{player.Name} encounters a fierce {monsterToFight.Name}");
 
     // Turn-Based combat
@@ -283,10 +292,17 @@ static bool StartCombat(Player player, Monster monsterToFight)
         // Process Player's Action
         if (playerChoice.Equals("attack", StringComparison.OrdinalIgnoreCase))
         {
-            // Calculate damage based on player strength and weapon
-            int damageDealt = player.GetTotalStrength();
-            monsterToFight.Health -= damageDealt;
-            Console.WriteLine($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!");
+            if (random.Next(20) + player.Stats["Dexterity"] > 10)
+            {
+                // Calculate damage based on player strength and weapon
+                int damageDealt = player.GetTotalStrength();
+                monsterToFight.Health -= damageDealt;
+                PrintInColor($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
+            }
+            else
+            {
+                PrintInColor("You swing and miss!", ConsoleColor.Gray);
+            }
         }
         else
         {
@@ -296,20 +312,27 @@ static bool StartCombat(Player player, Monster monsterToFight)
         // Check if Monster still lives and calculate their attack
         if (monsterToFight.Health > 0)
         {
-            // Calculate damage to player based on monster strength and player defense
-            int monsterDamage = monsterToFight.Stats["Strength"];
-            int playerDefense = player.GetTotalDefense();
-            int damageToPlayer = monsterDamage - playerDefense;
-
-            // Ensure at least 1 damage is dealt
-            if (damageToPlayer < 1)
+            if (random.Next(20) + monsterToFight.Stats["Dexterity"] > 10)
             {
-                damageToPlayer = 1;
-            }
+                // Calculate damage to player based on monster strength and player defense
+                int monsterDamage = monsterToFight.Stats["Strength"];
+                int playerDefense = player.GetTotalDefense();
+                int damageToPlayer = monsterDamage - playerDefense;
 
-            // Deal damage to player
-            player.Health -= damageToPlayer;
-            Console.WriteLine($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!");
+                // Ensure at least 1 damage is dealt
+                if (damageToPlayer < 1)
+                {
+                    damageToPlayer = 1;
+                }
+                
+                // Deal damage to player
+                player.Health -= damageToPlayer;
+                PrintInColor($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+            }
+            else
+            {
+                PrintInColor($"The {monsterToFight.Name} attacks and misses!", ConsoleColor.Gray);
+            }
         }
     }
 

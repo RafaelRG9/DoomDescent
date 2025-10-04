@@ -3,18 +3,25 @@ public class DungeonGenerator
     // We create one Random object and reuse it for better randomness.
     private Random _random = new Random();
 
-    // List to hold all possible items that can spawn in rooms
+    // Lists to hold all possible items and monsters that can spawn in rooms
     private List<Item> _masterLootTable;
+    private List<Monster> _masterMonsterTable;
 
     public DungeonGenerator()
     {
+        // --- MASTER LOOT TABLE ---
         _masterLootTable = new List<Item>();
-
-        // Populate the master loot table with some items
-        _masterLootTable.Add(new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!"));
         _masterLootTable.Add(new Armor("Rusty Armor", "Well, better than nothing!", 2));
         _masterLootTable.Add(new Weapon("Rusty Sword", "An old sword, as sharp as rolling pin!. At least it could give Tetanus", 2));
         _masterLootTable.Add(new Potion("Small Potion", "Wouldn't hurt to drink this, wouldn't help either (Restores 20 health, impressive...)", 20));
+
+        Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
+        _masterLootTable.Add(goblinHide);
+
+        // --- MASTER MONSTER TABLE ---
+        _masterMonsterTable = new List<Monster>();
+        _masterMonsterTable.Add(new Goblin(goblinHide));
+        _masterMonsterTable.Add(new Orc(null));// TODO add orc specific items to replace null
     }
 
     public Room Generate(int numberOfRooms)
@@ -56,13 +63,14 @@ public class DungeonGenerator
                 if (_random.Next(100) < 50)
                 {
                     // define loot, create monster, and add to room's list
-                    Item? goblinLoot = _masterLootTable.Find(item => item.Name == "Goblin Hide");
-                    Monster goblin = new Monster("Goblin", 20, 8, 3, 50, goblinLoot);
-                    nextRoom.MonstersInRoom.Add(goblin);
+                    int randomIndex = _random.Next(_masterMonsterTable.Count);
+                    Monster randomMonster = _masterMonsterTable[randomIndex];
+                    Monster monsterForRoom = new Monster(randomMonster.Name, randomMonster.MaxHealth, randomMonster.Stats["Strength"], randomMonster.Stats["Dexterity"], randomMonster.ExperienceValue, randomMonster.Loot);
+                    nextRoom.MonstersInRoom.Add(monsterForRoom);
 
                     // Update the room's description to mention the monster
                     nextRoom.Name = "Monster Room";
-                    nextRoom.Description = "A foul smell hangs in the air. A Goblin glares at you!";
+                    nextRoom.Description = $"A foul smell hangs in the air. A {monsterForRoom.Name} glares at you!";
                 }
                 else
                 {
