@@ -14,7 +14,7 @@ public class DungeonGenerator
         _masterLootTable.Add(new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!"));
         _masterLootTable.Add(new Armor("Rusty Armor", "Well, better than nothing!", 2));
         _masterLootTable.Add(new Weapon("Rusty Sword", "An old sword, as sharp as rolling pin!. At least it could give Tetanus", 2));
-        _masterLootTable.Add(new Item("Small Potion", "Wouldn't hurt to drink this, wouldn't help either"));
+        _masterLootTable.Add(new Potion("Small Potion", "Wouldn't hurt to drink this, wouldn't help either (Restores 20 health, impressive...)", 20));
     }
 
     public Room Generate(int numberOfRooms)

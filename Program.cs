@@ -209,7 +209,38 @@ while (true)
                 Console.WriteLine("What do you want to equip?");
             }
             break;
+        case "use":
+            if (words.Length > 1)
+            {
+                string itemToUseName = string.Join(" ", words.Skip(1));
 
+                Item? itemToUse = player.Inventory.Find(item => item.Name.Equals(itemToUseName, StringComparison.OrdinalIgnoreCase));
+
+                if (itemToUse == null)
+                {
+                    Console.WriteLine("You don't have that item in your inventory.");
+                    break;
+                }
+                if (itemToUse is Potion potion)
+                {
+                    player.Health += potion.HealthToRestore;
+                    if (player.Health > player.MaxHealth)
+                    {
+                        player.Health = player.MaxHealth; // Cap health at max health
+                    }
+                    player.Inventory.Remove(potion);
+                    Console.WriteLine($"You use the {potion.Name} and restore {potion.HealthToRestore} health. You now have {player.Health}/{player.MaxHealth} HP");
+                }
+                else
+                {
+                    Console.WriteLine("You can't use that item.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("What do you want to use?");
+            }
+            break;
         case "quit":
             Console.WriteLine("You decide to rest for now. Until next time!");
             return; // Use 'return' to exit the application from the main context.
