@@ -5,6 +5,7 @@ public class Player : Character
     public int ExperienceToNextLevel { get; set; }
     public Room? CurrentRoom { get; set; }
     public List<Item> Inventory { get; private set; }
+    public Dictionary<EquipmentSlot, Item> Equipment { get; private set; }
 
     public Player(string name, int health, int strength, int dexterity)
         : base(name, health, strength, dexterity)
@@ -13,6 +14,7 @@ public class Player : Character
         Experience = 0;
         ExperienceToNextLevel = 100;
         Inventory = new List<Item>();
+        Equipment = new Dictionary<EquipmentSlot, Item>();
     }
 
     public void AddExperience(int experienceGained)

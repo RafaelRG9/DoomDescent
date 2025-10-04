@@ -140,7 +140,7 @@ while (true)
             }
             break;
 
-            case "drop":
+        case "drop":
             if (words.Length > 1)
             {
                 string itemToDropName = string.Join(" ", words.Skip(1));
@@ -152,6 +152,61 @@ while (true)
                     Console.WriteLine($"You dropped the {itemToDrop.Name}");
                     player.CurrentRoom.ItemsInRoom.Add(itemToDrop);
                 }
+            }
+            break;
+        
+        case "equip":
+            if (words.Length > 1)
+            {
+                string itemToEquipName = string.Join(" ", words.Skip(1));
+
+                Item? itemToEquip = player.Inventory.Find(item => item.Name.Equals(itemToEquipName, StringComparison.OrdinalIgnoreCase));
+
+                // Find if the item is in the Inventory
+                if (itemToEquip == null)
+                {
+                    Console.WriteLine("You don't have that item in your inventory.");
+                    break;
+                }
+                // If item is a Weapon
+                if (itemToEquip is Weapon weapon)
+                {
+                    // Unequip any equipped item in the slot
+                    if (player.Equipment.ContainsKey(EquipmentSlot.MainHand))
+                    {
+                        player.Inventory.Add(player.Equipment[EquipmentSlot.MainHand]);
+                        Console.WriteLine($"You unequip {player.Equipment[EquipmentSlot.MainHand].Name}.");
+                    }
+
+                    // Equip the new weapon
+                    player.Equipment[EquipmentSlot.MainHand] = weapon;
+                    player.Inventory.Remove(weapon); // This line removes it from the inventory
+                    Console.WriteLine($"You equip the {weapon.Name}.");
+                }
+                // If item is Armor
+                else if (itemToEquip is Armor armor)
+                {
+                    // Unequip any equipped item in the slot
+                    if (player.Equipment.ContainsKey(EquipmentSlot.Chest))
+                    {
+                        player.Inventory.Add(player.Equipment[EquipmentSlot.Chest]);
+                        Console.WriteLine($"You unequip {player.Equipment[EquipmentSlot.Chest].Name}.");
+                    }
+
+                    // Equip the new armor
+                    player.Equipment[EquipmentSlot.Chest] = armor;
+                    player.Inventory.Remove(armor); // This line removes it from the inventory
+                    Console.WriteLine($"You equip the {armor.Name}.");
+                }
+                else
+                {
+                    // The item is not equippable.
+                    Console.WriteLine("You can't equip that type of item.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("What do you want to equip?");
             }
             break;
 
