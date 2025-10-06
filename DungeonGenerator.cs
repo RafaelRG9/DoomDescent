@@ -1,3 +1,5 @@
+using System.Formats.Asn1;
+
 public class DungeonGenerator
 {
     // We create one Random object and reuse it for better randomness.
@@ -6,6 +8,7 @@ public class DungeonGenerator
     // Lists to hold all possible items and monsters that can spawn in rooms
     private List<Item> _masterLootTable;
     private List<Monster> _masterMonsterTable;
+    private List<Monster> _masterBossTable;
 
     public DungeonGenerator()
     {
@@ -22,6 +25,10 @@ public class DungeonGenerator
         _masterMonsterTable = new List<Monster>();
         _masterMonsterTable.Add(new Goblin(goblinHide));
         _masterMonsterTable.Add(new Orc(null));// TODO add orc specific items to replace null
+
+        // --- MASTER BOSS TABLE ---
+        _masterBossTable = new List<Monster>();
+        _masterBossTable.Add(new Boss(null)); //TODO add boss specific items to replace null
     }
 
     public Room Generate(int numberOfRooms)
@@ -60,7 +67,15 @@ public class DungeonGenerator
                 map.Add(nextPositionKey, nextRoom);
 
                 // --- MONSTER & ITEM SPAWNING ---
-                if (_random.Next(100) < 50)
+                if (i == numberOfRooms - 2)
+                {
+                    // ---- SPAWN THE BOSS ---
+                    int randomIndex = _random.Next(_masterBossTable.Count);
+                    Monster randomBoss = _masterBossTable[randomIndex];
+                    Monster BossForRoom = new Monster(randomBoss.Name, randomBoss.MaxHealth, randomBoss.Stats["Strength"], randomBoss.Stats["Dexterity"], randomBoss.ExperienceValue, randomBoss.Loot);
+                    nextRoom.MonstersInRoom.Add(BossForRoom);
+                }
+                else if (_random.Next(100) < 50)
                 {
                     // define loot, create monster, and add to room's list
                     int randomIndex = _random.Next(_masterMonsterTable.Count);
@@ -103,7 +118,17 @@ public class DungeonGenerator
                         break;
                 }
             }
-            currentRoom = nextRoom;
+            // Main walker logic: 80% chance to continue the current path. 
+            // The 20% chance to jump to a random existing room encourages branching for a less linear map.
+            if (_random.Next(100) < 80)
+            {
+                currentRoom = nextRoom;
+            }
+            else
+            {
+                var allRooms = map.Values.ToList();
+                currentRoom = allRooms[_random.Next(allRooms.Count)];
+            }
         }
         // --- RETURN TO START ---
         return startRoom;
