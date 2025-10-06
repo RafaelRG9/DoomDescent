@@ -35,8 +35,8 @@
   * [x] Recipe-based crafting in designated safe areas.
 
 * [ ] **Advanced Procedural Generation**
-  * [ ] Create branching, interconnected dungeons (Improved Drunkard's Walk).
-  * [ ] Add special room types (e.g., a guaranteed safe Start Room, a Boss Room).
+  * [X] Create branching, interconnected dungeons (Improved Drunkard's Walk).
+  * [X] Add special room types (e.g., a guaranteed safe Start Room, a Boss Room).
 * [ ] **Core Roguelike Loop**
   * [ ] A `Game` class to manage the entire session.
   * [ ] Game Over screen on player death.
