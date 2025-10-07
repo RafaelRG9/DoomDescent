@@ -1,7 +1,7 @@
 public class Game
 {
     //Game's state variables.
-    private Player _player;
+    private Player _player = null!;
     private DungeonGenerator _generator;
     private List<CraftingRecipe> _availableRecipes;
 
@@ -18,6 +18,12 @@ public class Game
             { goblinHide, 2 }
         });
         _availableRecipes.Add(armorRecipe);
+    }
+
+    private void SetupNewGame()
+    {
+        Console.Clear();
+        Console.WriteLine("Here we go!");
 
         // --- WORLD AND PLAYER CREATION ---
         Room startingRoom = _generator.Generate(10);
@@ -25,9 +31,9 @@ public class Game
         _player.CurrentRoom = startingRoom;
     }
 
-    public void Run()
+
+    private void GameLoop()
     {
-        DescribeRoom();
         while (true)
         {
             Console.Write("\n> ");
@@ -266,6 +272,24 @@ public class Game
                     break;
             }
         }
+    }
+    public void Run()
+    {
+        while (true)
+        {
+            SetupNewGame();
+            DescribeRoom();
+            GameLoop();
+
+            Console.WriteLine("\nPlay Again? (y/n)");
+            string? playAgain = Console.ReadLine();
+
+            if (playAgain?.ToLower() != "y")
+            {
+                break;
+            }
+        }
+        Console.WriteLine("Thanks for playing!");
     }
     // --- HELPER METHODS ---
 
