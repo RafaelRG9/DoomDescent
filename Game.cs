@@ -29,6 +29,7 @@ public class Game
         Room startingRoom = _generator.Generate(10);
         _player = new Player("Hero", 50, 10, 5);
         _player.CurrentRoom = startingRoom;
+        _player.VisitedRooms.Add(startingRoom);
     }
 
 
@@ -95,6 +96,11 @@ public class Game
                         Console.WriteLine($" - {stat.Key}: {stat.Value}");
                     }
                     Console.WriteLine("-----------------------");
+                    break;
+
+                case "map":
+                case "m":
+                    DrawMap();
                     break;
 
                 case "inventory":
@@ -434,6 +440,7 @@ public class Game
         {
             // Move Player
             _player.CurrentRoom = newRoom;
+            _player.VisitedRooms.Add(newRoom);
             DescribeRoom();
 
             // Trigger combat if it is a monster room
@@ -455,5 +462,49 @@ public class Game
         {
             Console.WriteLine("You can't go that way.");
         }
+    }
+
+    private void DrawMap()
+    {
+        // null guard
+        if (_player.CurrentRoom == null)
+        {
+            Console.WriteLine("Player is not in the room, how did you do that?");
+            return; // Exit the method early
+        }
+
+        // Find the boundaries of the discovered map.
+        int minX = _player.VisitedRooms.Min(r => r.X);
+        int maxX = _player.VisitedRooms.Max(r => r.X);
+        int minY = _player.VisitedRooms.Min(r => r.Y);
+        int maxY = _player.VisitedRooms.Max(r => r.Y);
+
+        Console.WriteLine("\n--- Dungeon Map ---");
+
+        // Loop through the grid from top to bottom.
+        for (int y = maxY; y >= minY; y--)
+        {
+            // A string for each row of the map.
+            string line = "";
+            for (int x = minX; x <= maxX; x++)
+            {
+                // Check if the player is at the current coordinate.
+                if (_player.CurrentRoom.X == x && _player.CurrentRoom.Y == y)
+                {
+                    line += "[P]"; // Player's position
+                }
+                // Check if a visited room exists at the current coordinate.
+                else if (_player.VisitedRooms.Any(r => r.X == x && r.Y == y))
+                {
+                    line += "[#]"; // Visited room
+                }
+                else
+                {
+                    line += "   "; // Empty, undiscovered space
+                }
+            }
+            Console.WriteLine(line);
+        }
+        Console.WriteLine("-------------------");
     }
 }

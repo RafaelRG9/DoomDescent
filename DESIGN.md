@@ -34,13 +34,13 @@
   * [x] `use` command for consumables.
   * [x] Recipe-based crafting in designated safe areas.
 
-* [ ] **Advanced Procedural Generation**
+* [X] **Advanced Procedural Generation**
   * [X] Create branching, interconnected dungeons (Improved Drunkard's Walk).
   * [X] Add special room types (e.g., a guaranteed safe Start Room, a Boss Room).
 * [ ] **Core Roguelike Loop**
-  * [ ] A `Game` class to manage the entire session.
-  * [ ] Game Over screen on player death.
-  * [ ] A "Play Again?" option that generates a new player and a new dungeon.
+  * [X] A `Game` class to manage the entire session.
+  * [X] Game Over screen on player death.
+  * [X] A "Play Again?" option that generates a new player and a new dungeon.
   * [ ] Difficulty scaling (Dungeon Floors).
 * [ ] **Enhanced User Experience**
   * [ ] Player Map system to show discovered rooms.

@@ -6,6 +6,7 @@ public class Player : Character
     public Room? CurrentRoom { get; set; }
     public List<Item> Inventory { get; private set; }
     public Dictionary<EquipmentSlot, Item> Equipment { get; private set; }
+    public HashSet<Room> VisitedRooms { get; private set; }
 
     public Player(string name, int health, int strength, int dexterity)
         : base(name, health, strength, dexterity)
@@ -15,6 +16,7 @@ public class Player : Character
         ExperienceToNextLevel = 100;
         Inventory = new List<Item>();
         Equipment = new Dictionary<EquipmentSlot, Item>();
+        VisitedRooms = new HashSet<Room>();
     }
 
     public int GetTotalStrength()
