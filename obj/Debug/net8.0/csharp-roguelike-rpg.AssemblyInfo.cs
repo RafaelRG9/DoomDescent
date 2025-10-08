@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("csharp-roguelike-rpg")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+de0cf00dd8d583c69a6c6c3bff4af3f37b667cda")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+af3fcf5222d2798cc26d97e94907888f8308c5c8")]
 [assembly: System.Reflection.AssemblyProductAttribute("csharp-roguelike-rpg")]
 [assembly: System.Reflection.AssemblyTitleAttribute("csharp-roguelike-rpg")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

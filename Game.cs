@@ -23,11 +23,11 @@ public class Game
     private void SetupNewGame()
     {
         Console.Clear();
-        SlowPrint("WELCOME TO YOUR DOOM!");
-        SlowPrint("Choose your weakling:");
-        SlowPrint("1. Warrior (High Health, High Strength)");
-        SlowPrint("2. Rogue   (High Dexterity, Balanced)");
-        SlowPrint("3. Mage    (Low Health, High Potential)");
+        UIManager.SlowPrint("WELCOME TO YOUR DOOM!");
+        UIManager.SlowPrint("Choose your weakling:");
+        UIManager.SlowPrint("1. Warrior (High Health, High Strength)");
+        UIManager.SlowPrint("2. Rogue   (High Dexterity, Balanced)");
+        UIManager.SlowPrint("3. Mage    (Low Health, High Potential)");
 
         PlayerClass chosenClass;
         while (true)
@@ -51,7 +51,7 @@ public class Game
             }
             Console.WriteLine("Invalid choice. Please enter 1, 2, or 3.");
         }
-        SlowPrint($"So, you will be playing the {chosenClass}? Good luck, you'll need it...");
+        UIManager.SlowPrint($"So, you will be playing the {chosenClass}? Good luck, you'll need it...");
 
         // --- WORLD AND PLAYER CREATION ---
         Room startingRoom = _generator.Generate(10);
@@ -70,7 +70,7 @@ public class Game
 
             if (string.IsNullOrEmpty(choice))
             {
-                SlowPrint("Please enter a command.");
+                UIManager.SlowPrint("Please enter a command.");
                 continue;
             }
 
@@ -158,7 +158,7 @@ public class Game
                         if (itemToExamine != null)
                         {
                             Console.WriteLine($"\n{itemToExamine.Name}");
-                            SlowPrint($"  {itemToExamine.Description}");
+                            UIManager.SlowPrint($"  {itemToExamine.Description}");
                         }
                         else
                         {
@@ -285,7 +285,7 @@ public class Game
                                 _player.Health = _player.MaxHealth; // Cap health at max health
                             }
                             _player.Inventory.Remove(potion);
-                            SlowPrint($"You use the {potion.Name} and restore {potion.HealthToRestore} health. You now have {_player.Health}/{_player.MaxHealth} HP", ConsoleColor.Green);
+                            UIManager.SlowPrint($"You use the {potion.Name} and restore {potion.HealthToRestore} health. You now have {_player.Health}/{_player.MaxHealth} HP", ConsoleColor.Green);
                         }
                         else
                         {
@@ -298,7 +298,7 @@ public class Game
                     }
                     break;
                 case "quit":
-                    SlowPrint("You decide to rest for now. Until next time!");
+                    UIManager.SlowPrint("You decide to rest for now. Until next time!");
                     return; // Use 'return' to exit the application from the main context.
 
                 default:
@@ -315,7 +315,7 @@ public class Game
             DescribeRoom();
             GameLoop();
 
-            SlowPrint("\nPlay Again? (y/n)");
+            UIManager.SlowPrint("\nPlay Again? (y/n)");
             string? playAgain = Console.ReadLine();
 
             if (playAgain?.ToLower() != "y")
@@ -323,7 +323,7 @@ public class Game
                 break;
             }
         }
-        SlowPrint("Thanks for playing!");
+        UIManager.SlowPrint("Thanks for playing!");
     }
 
     //----------------------------------------------------------------------------------------------------------
@@ -334,7 +334,7 @@ public class Game
     private bool StartCombat(Monster monsterToFight)
     {
         Random random = new Random();
-        SlowPrint($"{_player.Name} encounters a fierce {monsterToFight.Name}");
+        UIManager.SlowPrint($"{_player.Name} encounters a fierce {monsterToFight.Name}");
 
         // Turn-Based combat
         while (_player.Health > 0 && monsterToFight.Health > 0)
@@ -346,7 +346,12 @@ public class Game
             Console.WriteLine("\n--------------------");
 
             // Request Player for Action
-            SlowPrint("Your turn! Type 'attack' to fight");
+            UIManager.SlowPrint("Your turn! Choose an action");
+            Console.WriteLine("- attack");
+            foreach (var ability in _player.Abilities)
+            {
+                Console.WriteLine($"- {ability.Name?.ToLower()}");
+            }
             Console.Write("> ");
             string? playerChoice = Console.ReadLine();
 
@@ -365,16 +370,24 @@ public class Game
                     // Calculate damage based on player strength and weapon
                     int damageDealt = _player.GetTotalStrength();
                     monsterToFight.Health -= damageDealt;
-                    SlowPrint($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
+                    UIManager.SlowPrint($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
                 }
                 else
                 {
-                    SlowPrint("You swing and miss!", ConsoleColor.Gray);
+                    UIManager.SlowPrint("You swing and miss!", ConsoleColor.Gray);
                 }
             }
             else
             {
-                SlowPrint("Invalid command! You hesitate and lose your turn.");
+                Ability? chosenAbility = _player.Abilities.Find(a => a.Name?.Equals(playerChoice, StringComparison.OrdinalIgnoreCase) ?? false);
+                if (chosenAbility != null)
+                {
+                    chosenAbility.Use(_player, monsterToFight);
+                }
+                else
+                {
+                    UIManager.SlowPrint("Invalid command! You hesitate and lose your turn.");
+                }
             }
 
             // Check if Monster still lives and calculate their attack
@@ -395,11 +408,11 @@ public class Game
 
                     // Deal damage to player
                     _player.Health -= damageToPlayer;
-                    SlowPrint($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                    UIManager.SlowPrint($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
                 }
                 else
                 {
-                    SlowPrint($"The {monsterToFight.Name} attacks and misses!", ConsoleColor.Gray);
+                    UIManager.SlowPrint($"The {monsterToFight.Name} attacks and misses!", ConsoleColor.Gray);
                 }
             }
         }
@@ -409,10 +422,10 @@ public class Game
         // Check for winners
         if (_player.Health > 0)
         {
-            SlowPrint($"You defeated the {monsterToFight.Name}!");
+            UIManager.SlowPrint($"You defeated the {monsterToFight.Name}!");
             if (monsterToFight.Loot != null)
             {
-                SlowPrint($"You found a {monsterToFight.Loot.Name}!");
+                UIManager.SlowPrint($"You found a {monsterToFight.Loot.Name}!");
                 _player.Inventory.Add(monsterToFight.Loot);
             }
             _player.AddExperience(monsterToFight.ExperienceValue);
@@ -433,26 +446,26 @@ public class Game
             return;
         }
 
-        SlowPrint($"\nLocation: {_player.CurrentRoom.Name} ({_player.CurrentRoom.X}, {_player.CurrentRoom.Y})");
-        SlowPrint(_player.CurrentRoom.Description);
+        UIManager.SlowPrint($"\nLocation: {_player.CurrentRoom.Name} ({_player.CurrentRoom.X}, {_player.CurrentRoom.Y})");
+        UIManager.SlowPrint(_player.CurrentRoom.Description);
 
         // --- MONSTER OR ITEM LIST ---
         if (_player.CurrentRoom.MonstersInRoom.Count > 0)
         {
-            SlowPrint("\nDangerous creatures lurk here:");
+            UIManager.SlowPrint("\nDangerous creatures lurk here:");
             foreach (Monster monster in _player.CurrentRoom.MonstersInRoom)
             {
-                SlowPrint($"- A fearsome {monster.Name}");
+                UIManager.SlowPrint($"- A fearsome {monster.Name}");
             }
         }
         else
         {
             if (_player.CurrentRoom.ItemsInRoom.Count > 0)
             {
-                SlowPrint("\nYou found treasure in this room:");
+                UIManager.SlowPrint("\nYou found treasure in this room:");
                 foreach (Item item in _player.CurrentRoom.ItemsInRoom)
                 {
-                    SlowPrint($"- {item.Name}");
+                    UIManager.SlowPrint($"- {item.Name}");
                 }
             }
         }
@@ -531,18 +544,5 @@ public class Game
         }
         Console.WriteLine("-------------------");
     }
-    private void SlowPrint(string text, ConsoleColor? color = null)
-    {
-        if (color.HasValue)
-        {
-            Console.ForegroundColor = color.Value;
-        }
-        foreach (char c in text)
-        {
-            Console.Write(c);
-            Thread.Sleep(25); // Pause for 25 milliseconds between each character
-        }
-        Console.ResetColor();
-        Console.WriteLine(); // Move to the next line after the text is finished
-    }
+
 }

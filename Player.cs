@@ -7,6 +7,7 @@ public class Player : Character
     public List<Item> Inventory { get; private set; }
     public Dictionary<EquipmentSlot, Item> Equipment { get; private set; }
     public HashSet<Room> VisitedRooms { get; private set; }
+    public List<Ability> Abilities { get; private set; }
 
     public Player(string name, PlayerClass playerClass)
         : base(name, 0, 0, 0)
@@ -17,6 +18,7 @@ public class Player : Character
         Inventory = new List<Item>();
         Equipment = new Dictionary<EquipmentSlot, Item>();
         VisitedRooms = new HashSet<Room>();
+        Abilities = new List<Ability>();
 
         switch (playerClass)
         {
@@ -24,6 +26,7 @@ public class Player : Character
                 MaxHealth = 80;
                 Stats["Strength"] = 12;
                 Stats["Dexterity"] = 4;
+                Abilities.Add(new PowerAttack());
                 break;
             case PlayerClass.Rogue:
                 MaxHealth = 60;
