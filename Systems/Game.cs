@@ -1,3 +1,5 @@
+namespace csharp_roguelike_rpg.Characters;
+
 public class Game
 {
     //Game's state variables.
@@ -24,6 +26,15 @@ public class Game
     {
         Console.Clear();
         UIManager.SlowPrint("WELCOME TO YOUR DOOM!");
+
+        string? playerName;
+        do
+        {
+            UIManager.SlowPrint("What is your name, fool?");
+            Console.Write("> ");
+            playerName = Console.ReadLine();
+        } while (string.IsNullOrWhiteSpace(playerName));
+
         UIManager.SlowPrint("Choose your weakling:");
         UIManager.SlowPrint("1. Warrior (High Health, High Strength)");
         UIManager.SlowPrint("2. Rogue   (High Dexterity, Balanced)");
@@ -55,7 +66,7 @@ public class Game
 
         // --- WORLD AND PLAYER CREATION ---
         Room startingRoom = _generator.Generate(10);
-        _player = new Player("Hero", chosenClass);
+        _player = new Player(playerName, chosenClass);
         _player.CurrentRoom = startingRoom;
         _player.VisitedRooms.Add(startingRoom);
     }
@@ -334,9 +345,22 @@ public class Game
     private bool StartCombat(Monster monsterToFight)
     {
         Random random = new Random();
+
         UIManager.SlowPrint($"{_player.Name} encounters a fierce {monsterToFight.Name}");
 
+        UIManager.SlowPrint("Rolling for initiave... feeling lucky?");
+        var combatants = new List<Character> { _player, monsterToFight };
+        var turnOrder = combatants.OrderByDescending(c => c.Stats["Dexterity"] + random.Next(1, 21)).ToList();
+        UIManager.SlowPrint("Turn order is set!");
+        foreach (var character in turnOrder)
+        {
+            UIManager.SlowPrint($"- {character.Name}", ConsoleColor.DarkGray);
+        }
+
+
+
         // Turn-Based combat
+        int round = 1;
         while (_player.Health > 0 && monsterToFight.Health > 0)
         {
             // Display Status
@@ -345,74 +369,85 @@ public class Game
             Console.WriteLine($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
             Console.WriteLine("\n--------------------");
 
-            // Request Player for Action
-            UIManager.SlowPrint("Your turn! Choose an action");
-            Console.WriteLine("- attack");
-            foreach (var ability in _player.Abilities)
-            {
-                Console.WriteLine($"- {ability.Name?.ToLower()}");
-            }
-            Console.Write("> ");
-            string? playerChoice = Console.ReadLine();
+            Console.WriteLine($"\n--- ROUND {round} ---");
 
-            // Safety check to prevent passing null values
-            if (string.IsNullOrEmpty(playerChoice))
+            foreach (var character in turnOrder)
             {
-                Console.WriteLine("You must enter a command!");
-                continue; // Skip the rest of the turn
-            }
+                if (character.Health <= 0) continue;
+                if (_player.Health <= 0 || monsterToFight.Health <= 0) break;
 
-            // Process Player's Action
-            if (playerChoice.Equals("attack", StringComparison.OrdinalIgnoreCase))
-            {
-                if (random.Next(20) + _player.Stats["Dexterity"] > 10)
+                if (character is Player)
                 {
-                    // Calculate damage based on player strength and weapon
-                    int damageDealt = _player.GetTotalStrength();
-                    monsterToFight.Health -= damageDealt;
-                    UIManager.SlowPrint($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
-                }
-                else
-                {
-                    UIManager.SlowPrint("You swing and miss!", ConsoleColor.Gray);
-                }
-            }
-            else
-            {
-                Ability? chosenAbility = _player.Abilities.Find(a => a.Name?.Equals(playerChoice, StringComparison.OrdinalIgnoreCase) ?? false);
-                if (chosenAbility != null)
-                {
-                    chosenAbility.Use(_player, monsterToFight);
-                }
-                else
-                {
-                    UIManager.SlowPrint("Invalid command! You hesitate and lose your turn.");
-                }
-            }
-
-            // Check if Monster still lives and calculate their attack
-            if (monsterToFight.Health > 0)
-            {
-                if (random.Next(20) + monsterToFight.Stats["Dexterity"] > 10)
-                {
-                    // Calculate damage to player based on monster strength and player defense
-                    int monsterDamage = monsterToFight.Stats["Strength"];
-                    int playerDefense = _player.GetTotalDefense();
-                    int damageToPlayer = monsterDamage - playerDefense;
-
-                    // Ensure at least 1 damage is dealt
-                    if (damageToPlayer < 1)
+                    UIManager.SlowPrint("Your turn! Choose an action");
+                    Console.WriteLine("- attack");
+                    foreach (var ability in _player.Abilities)
                     {
-                        damageToPlayer = 1;
+                        Console.WriteLine($"- {ability.Name?.ToLower()}");
+                    }
+                    Console.Write("> ");
+                    string? playerChoice = Console.ReadLine();
+
+                    // Safety check to prevent passing null values
+                    if (string.IsNullOrEmpty(playerChoice))
+                    {
+                        Console.WriteLine("You must enter a command!");
+                        continue; // Skip the rest of the turn
                     }
 
-                    // Deal damage to player
-                    _player.Health -= damageToPlayer;
-                    UIManager.SlowPrint($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                    // Process Player's Action
+                    if (playerChoice.Equals("attack", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (random.Next(20) + _player.Stats["Dexterity"] > 10)
+                        {
+                            // Calculate damage based on player strength and weapon
+                            int damageDealt = _player.GetTotalStrength();
+                            monsterToFight.Health -= damageDealt;
+                            UIManager.SlowPrint($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
+                        }
+                        else
+                        {
+                            UIManager.SlowPrint("You swing and miss!", ConsoleColor.Gray);
+                        }
+                    }
+                    else
+                    {
+                        Ability? chosenAbility = _player.Abilities.Find(a => a.Name?.Equals(playerChoice, StringComparison.OrdinalIgnoreCase) ?? false);
+                        if (chosenAbility != null)
+                        {
+                            chosenAbility.Use(_player, monsterToFight);
+                        }
+                        else
+                        {
+                            UIManager.SlowPrint("Invalid command! You hesitate and lose your turn.");
+                        }
+                    }
                 }
-                else
+                else if (character is Monster actingMonster)
                 {
-                    UIManager.SlowPrint($"The {monsterToFight.Name} attacks and misses!", ConsoleColor.Gray);
+                    if (monsterToFight.Health > 0)
+                    {
+                        if (random.Next(20) + monsterToFight.Stats["Dexterity"] > 10)
+                        {
+                            // Calculate damage to player based on monster strength and player defense
+                            int monsterDamage = monsterToFight.Stats["Strength"];
+                            int playerDefense = _player.GetTotalDefense();
+                            int damageToPlayer = monsterDamage - playerDefense;
+
+                            // Ensure at least 1 damage is dealt
+                            if (damageToPlayer < 1)
+                            {
+                                damageToPlayer = 1;
+                            }
+
+                            // Deal damage to player
+                            _player.Health -= damageToPlayer;
+                            UIManager.SlowPrint($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                        }
+                        else
+                        {
+                            UIManager.SlowPrint($"The {monsterToFight.Name} attacks and misses!", ConsoleColor.Gray);
+                        }
+                    }
                 }
             }
         }
@@ -544,5 +579,4 @@ public class Game
         }
         Console.WriteLine("-------------------");
     }
-
 }

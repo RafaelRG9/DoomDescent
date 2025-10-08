@@ -1,4 +1,4 @@
-using System.Formats.Asn1;
+namespace csharp_roguelike_rpg.Characters;
 
 public class DungeonGenerator
 {

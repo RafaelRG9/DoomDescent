@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Characters;
 public class Player : Character
 {
     public PlayerClass Class { get; private set; }
