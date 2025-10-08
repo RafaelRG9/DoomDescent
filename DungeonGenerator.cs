@@ -72,7 +72,7 @@ public class DungeonGenerator
                     // ---- SPAWN THE BOSS ---
                     int randomIndex = _random.Next(_masterBossTable.Count);
                     Monster randomBoss = _masterBossTable[randomIndex];
-                    Monster BossForRoom = new Monster(randomBoss.Name, randomBoss.MaxHealth, randomBoss.Stats["Strength"], randomBoss.Stats["Dexterity"], randomBoss.ExperienceValue, randomBoss.Loot);
+                    Monster BossForRoom = new Monster(randomBoss.Name, randomBoss.MaxHealth, randomBoss.Stats["Strength"], randomBoss.Stats["Dexterity"], randomBoss.ExperienceValue, randomBoss.Stats["Intellect"], randomBoss.Loot);
                     nextRoom.MonstersInRoom.Add(BossForRoom);
                 }
                 else if (_random.Next(100) < 50)
@@ -80,7 +80,7 @@ public class DungeonGenerator
                     // define loot, create monster, and add to room's list
                     int randomIndex = _random.Next(_masterMonsterTable.Count);
                     Monster randomMonster = _masterMonsterTable[randomIndex];
-                    Monster monsterForRoom = new Monster(randomMonster.Name, randomMonster.MaxHealth, randomMonster.Stats["Strength"], randomMonster.Stats["Dexterity"], randomMonster.ExperienceValue, randomMonster.Loot);
+                    Monster monsterForRoom = new Monster(randomMonster.Name, randomMonster.MaxHealth, randomMonster.Stats["Strength"], randomMonster.Stats["Dexterity"], randomMonster.ExperienceValue, randomMonster.Stats["Intellect"], randomMonster.Loot);
                     nextRoom.MonstersInRoom.Add(monsterForRoom);
 
                     // Update the room's description to mention the monster

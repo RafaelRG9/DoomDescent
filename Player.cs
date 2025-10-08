@@ -1,5 +1,6 @@
 public class Player : Character
 {
+    public PlayerClass Class { get; private set; }
     public int Level { get; set; }
     public int Experience { get; set; }
     public int ExperienceToNextLevel { get; set; }
@@ -10,7 +11,7 @@ public class Player : Character
     public List<Ability> Abilities { get; private set; }
 
     public Player(string name, PlayerClass playerClass)
-        : base(name, 0, 0, 0)
+        : base(name, 0, 0, 0, 0)
     {
         Level = 1;
         Experience = 0;
@@ -26,21 +27,26 @@ public class Player : Character
                 MaxHealth = 80;
                 Stats["Strength"] = 12;
                 Stats["Dexterity"] = 4;
+                Stats["Intellect"] = 3;
                 Abilities.Add(new PowerAttack());
                 break;
             case PlayerClass.Rogue:
                 MaxHealth = 60;
                 Stats["Strength"] = 8;
                 Stats["Dexterity"] = 10;
+                Stats["Intellect"] = 5;
+                Abilities.Add(new DoubleStrike());
                 break;
             case PlayerClass.Mage:
                 MaxHealth = 50;
                 Stats["Strength"] = 5;
                 Stats["Dexterity"] = 6;
-                // TODO: Add an "Intellect" stat for mages
+                Stats["Intellect"] = 12;
+                Abilities.Add(new Fireball());
                 break;
         }
         Health = MaxHealth;
+        Class = playerClass;
     }
 
     public int GetTotalStrength()
@@ -80,32 +86,51 @@ public class Player : Character
         Experience += experienceGained;
         Console.WriteLine($"You gained {experienceGained} experience!");
 
-        // Check if player has enough XP to level Up
-        // Using a loop to carryover overflowing XP
         while (Experience >= ExperienceToNextLevel)
         {
             // Level up!
             Level++;
+            Experience -= ExperienceToNextLevel;
             Console.WriteLine($"\n*** You have reached Level {Level}! ***");
 
-            // Keep any remainder XP
-            Experience -= ExperienceToNextLevel;
+            // Increase stats, static for now but formulaic later
+            int healthIncrease = 0;
+            int strengthIncrease = 0;
+            int dexterityIncrease = 0;
+            int intellectIncrease = 0;
 
-            // Increase stats, static for now bu formulaic later
-            int healthIncrease = 10;
-            int strengthIncrease = 2;
-            int dexterityIncrease = 1;
+            switch (Class)
+            {
+                case PlayerClass.Warrior:
+                    healthIncrease = 15;
+                    strengthIncrease = 3;
+                    dexterityIncrease = 1;
+                    intellectIncrease = 0;
+                    break;
+                case PlayerClass.Rogue:
+                    healthIncrease = 10;
+                    strengthIncrease = 1;
+                    dexterityIncrease = 3;
+                    intellectIncrease = 1;
+                    break;
+                case PlayerClass.Mage:
+                    healthIncrease = 8;
+                    strengthIncrease = 1;
+                    dexterityIncrease = 1;
+                    intellectIncrease = 3;
+                    break;
+            }
 
             MaxHealth += healthIncrease;
             Stats["Strength"] += strengthIncrease;
             Stats["Dexterity"] += dexterityIncrease;
-
-            // Fully heal player
+            Stats["Intellect"] += intellectIncrease;
             Health = MaxHealth;
 
             Console.WriteLine($"Max Health increased by {healthIncrease}.");
             Console.WriteLine($"Strength increased by {strengthIncrease}.");
             Console.WriteLine($"Dexterity increased by {dexterityIncrease}.");
+            Console.WriteLine($"Intellect increased by {intellectIncrease}.");
 
             // Calculate XP for next level
             ExperienceToNextLevel = Level * 100;

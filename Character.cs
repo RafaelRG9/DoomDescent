@@ -5,7 +5,7 @@ public abstract class Character
     public int MaxHealth { get; set; }
     public Dictionary<string, int> Stats { get; private set; }
 
-    public Character(string name, int health, int strength, int dexterity)
+    public Character(string name, int health, int strength, int dexterity, int intellect)
     {
         Name = name;
         MaxHealth = health;
@@ -13,7 +13,8 @@ public abstract class Character
         Stats = new Dictionary<string, int>
         {
             {"Strength", strength},
-            {"Dexterity", dexterity}
+            {"Dexterity", dexterity},
+            {"Intellect", intellect}
         };
     }
 }
