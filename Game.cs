@@ -23,11 +23,39 @@ public class Game
     private void SetupNewGame()
     {
         Console.Clear();
-        Console.WriteLine("Here we go!");
+        SlowPrint("WELCOME TO YOUR DOOM!");
+        SlowPrint("Choose your weakling:");
+        SlowPrint("1. Warrior (High Health, High Strength)");
+        SlowPrint("2. Rogue   (High Dexterity, Balanced)");
+        SlowPrint("3. Mage    (Low Health, High Potential)");
+
+        PlayerClass chosenClass;
+        while (true)
+        {
+            Console.Write("> ");
+            string? input = Console.ReadLine();
+            if (input == "1" || input?.ToLower() == "warrior")
+            {
+                chosenClass = PlayerClass.Warrior;
+                break;
+            }
+            if (input == "2" || input?.ToLower() == "rogue")
+            {
+                chosenClass = PlayerClass.Rogue;
+                break;
+            }
+            if (input == "3" || input?.ToLower() == "mage")
+            {
+                chosenClass = PlayerClass.Mage;
+                break;
+            }
+            Console.WriteLine("Invalid choice. Please enter 1, 2, or 3.");
+        }
+        SlowPrint($"So, you will be playing the {chosenClass}? Good luck, you'll need it...");
 
         // --- WORLD AND PLAYER CREATION ---
         Room startingRoom = _generator.Generate(10);
-        _player = new Player("Hero", 50, 10, 5);
+        _player = new Player("Hero", chosenClass);
         _player.CurrentRoom = startingRoom;
         _player.VisitedRooms.Add(startingRoom);
     }

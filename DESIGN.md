@@ -42,9 +42,9 @@
   * [X] Game Over screen on player death.
   * [X] A "Play Again?" option that generates a new player and a new dungeon.
   * [ ] Difficulty scaling (Dungeon Floors).
-* [ ] **Enhanced User Experience**
-  * [ ] Player Map system to show discovered rooms.
-  * [ ] Atmospheric pacing with delayed text printing.
+* [X] **Enhanced User Experience**
+  * [X] Player Map system to show discovered rooms.
+  * [X] Atmospheric pacing with delayed text printing.
 
 ## 4. Core Data Models (Class Blueprint)
 

@@ -8,8 +8,8 @@ public class Player : Character
     public Dictionary<EquipmentSlot, Item> Equipment { get; private set; }
     public HashSet<Room> VisitedRooms { get; private set; }
 
-    public Player(string name, int health, int strength, int dexterity)
-        : base(name, health, strength, dexterity)
+    public Player(string name, PlayerClass playerClass)
+        : base(name, 0, 0, 0)
     {
         Level = 1;
         Experience = 0;
@@ -17,6 +17,27 @@ public class Player : Character
         Inventory = new List<Item>();
         Equipment = new Dictionary<EquipmentSlot, Item>();
         VisitedRooms = new HashSet<Room>();
+
+        switch (playerClass)
+        {
+            case PlayerClass.Warrior:
+                MaxHealth = 80;
+                Stats["Strength"] = 12;
+                Stats["Dexterity"] = 4;
+                break;
+            case PlayerClass.Rogue:
+                MaxHealth = 60;
+                Stats["Strength"] = 8;
+                Stats["Dexterity"] = 10;
+                break;
+            case PlayerClass.Mage:
+                MaxHealth = 50;
+                Stats["Strength"] = 5;
+                Stats["Dexterity"] = 6;
+                // TODO: Add an "Intellect" stat for mages
+                break;
+        }
+        Health = MaxHealth;
     }
 
     public int GetTotalStrength()
