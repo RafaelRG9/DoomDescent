@@ -2,33 +2,12 @@ namespace csharp_roguelike_rpg.Characters;
 
 public class DungeonGenerator
 {
-    // We create one Random object and reuse it for better randomness.
     private Random _random = new Random();
+    private GameData _gameData;
 
-    // Lists to hold all possible items and monsters that can spawn in rooms
-    private List<Item> _masterLootTable;
-    private List<Monster> _masterMonsterTable;
-    private List<Monster> _masterBossTable;
-
-    public DungeonGenerator()
+    public DungeonGenerator(GameData gameData)
     {
-        // --- MASTER LOOT TABLE ---
-        _masterLootTable = new List<Item>();
-        _masterLootTable.Add(new Armor("Rusty Armor", "Well, better than nothing!", 2));
-        _masterLootTable.Add(new Weapon("Rusty Sword", "An old sword, as sharp as rolling pin!. At least it could give Tetanus", 2));
-        _masterLootTable.Add(new Potion("Small Potion", "Wouldn't hurt to drink this, wouldn't help either (Restores 20 health, impressive...)", 20));
-
-        Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
-        _masterLootTable.Add(goblinHide);
-
-        // --- MASTER MONSTER TABLE ---
-        _masterMonsterTable = new List<Monster>();
-        _masterMonsterTable.Add(new Goblin(goblinHide));
-        _masterMonsterTable.Add(new Orc(null));// TODO add orc specific items to replace null
-
-        // --- MASTER BOSS TABLE ---
-        _masterBossTable = new List<Monster>();
-        _masterBossTable.Add(new Boss(null)); //TODO add boss specific items to replace null
+        _gameData = gameData;
     }
 
     public Room Generate(int numberOfRooms)
@@ -70,16 +49,16 @@ public class DungeonGenerator
                 if (i == numberOfRooms - 2)
                 {
                     // ---- SPAWN THE BOSS ---
-                    int randomIndex = _random.Next(_masterBossTable.Count);
-                    Monster randomBoss = _masterBossTable[randomIndex];
+                    int randomIndex = _random.Next(_gameData.MasterBossTable.Count);
+                    Monster randomBoss = _gameData.MasterBossTable[randomIndex];
                     Monster BossForRoom = new Monster(randomBoss.Name, randomBoss.MaxHealth, randomBoss.Stats["Strength"], randomBoss.Stats["Dexterity"], randomBoss.ExperienceValue, randomBoss.Stats["Intellect"], randomBoss.Loot);
                     nextRoom.MonstersInRoom.Add(BossForRoom);
                 }
                 else if (_random.Next(100) < 50)
                 {
                     // define loot, create monster, and add to room's list
-                    int randomIndex = _random.Next(_masterMonsterTable.Count);
-                    Monster randomMonster = _masterMonsterTable[randomIndex];
+                    int randomIndex = _random.Next(_gameData.MasterMonsterTable.Count);
+                    Monster randomMonster = _gameData.MasterMonsterTable[randomIndex];
                     Monster monsterForRoom = new Monster(randomMonster.Name, randomMonster.MaxHealth, randomMonster.Stats["Strength"], randomMonster.Stats["Dexterity"], randomMonster.ExperienceValue, randomMonster.Stats["Intellect"], randomMonster.Loot);
                     nextRoom.MonstersInRoom.Add(monsterForRoom);
 
@@ -89,8 +68,8 @@ public class DungeonGenerator
                 }
                 else
                 {
-                    int randomIndex = _random.Next(_masterLootTable.Count);
-                    Item lootItem = _masterLootTable[randomIndex];
+                    int randomIndex = _random.Next(_gameData.MasterLootTable.Count);
+                    Item lootItem = _gameData.MasterLootTable[randomIndex];
                     nextRoom.ItemsInRoom.Add(lootItem);
 
                     nextRoom.Name = "Treasure Room";

@@ -1,25 +1,18 @@
-namespace csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Characters;
+
+namespace csharp_roguelike_rpg.Systems;
 
 public class Game
 {
-    //Game's state variables.
+    // --- FIELDS ---
     private Player _player = null!;
     private DungeonGenerator _generator;
-    private List<CraftingRecipe> _availableRecipes;
+    private GameData _gameData;
 
     public Game()
     {
-        _generator = new DungeonGenerator();
-        _availableRecipes = new List<CraftingRecipe>();
-
-        // --- ITEMS AND RECIPES ---
-        Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
-        Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
-        CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>
-        {
-            { goblinHide, 2 }
-        });
-        _availableRecipes.Add(armorRecipe);
+        _gameData = new GameData();
+        _generator = new DungeonGenerator(_gameData);
     }
 
     private void SetupNewGame()
@@ -309,6 +302,98 @@ public class Game
                         Console.WriteLine("What do you want to use?");
                     }
                     break;
+                case "craft":
+                    // First, check if the room is safe (no monsters).
+                    if (_player.CurrentRoom != null && _player.CurrentRoom.MonstersInRoom.Any())
+                    {
+                        UIManager.SlowPrint("It's too dangerous to craft here!", ConsoleColor.Red);
+                        break;
+                    }
+
+                    // --- Enter the Crafting Sub-Menu ---
+                    UIManager.SlowPrint("You approach a quiet corner and lay out your materials...", ConsoleColor.DarkGray);
+                    while (true)
+                    {
+                        Console.WriteLine("\n--- Crafting Menu ---");
+                        if (_gameData.AvailableRecipes.Any())
+                        {
+                            Console.WriteLine("Available recipes:");
+                            foreach (var recipe in _gameData.AvailableRecipes)
+                            {
+                                Console.WriteLine($"- craft {recipe.ResultingItem.Name.ToLower()}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("You don't know any recipes.");
+                        }
+                        Console.WriteLine("- i (view inventory)");
+                        Console.WriteLine("- leave");
+                        Console.Write("> ");
+                        string? craftingChoice = Console.ReadLine();
+
+                        if (string.IsNullOrEmpty(craftingChoice)) continue;
+
+                        if (craftingChoice.Equals("leave", StringComparison.OrdinalIgnoreCase))
+                        {
+                            UIManager.SlowPrint("You pack up your materials.");
+                            break; // Exit the crafting loop
+                        }
+                        else if (craftingChoice.Equals("i", StringComparison.OrdinalIgnoreCase) || craftingChoice.Equals("inventory", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (_player.Inventory.Any())
+                            {
+                                Console.WriteLine("\nInventory");
+                                foreach (var item in _player.Inventory)
+                                {
+                                    Console.WriteLine($"- {item.Name}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("\nYour inventory is empty");
+                            }
+                        }
+                        else if (craftingChoice.StartsWith("craft ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string itemToCraftName = craftingChoice.Substring(6);
+
+                            CraftingRecipe? recipe = _gameData.AvailableRecipes.Find(r => r.ResultingItem.Name.Equals(itemToCraftName, StringComparison.OrdinalIgnoreCase));
+
+                            if (recipe == null)
+                            {
+                                Console.WriteLine("You don't know how to craft that.");
+                                continue;
+                            }
+
+                            bool canCraft = true;
+                            foreach (var material in recipe.RequiredMaterials)
+                            {
+                                int materialCount = _player.Inventory.Count(item => item.Name == material.Key.Name);
+                                if (materialCount < material.Value)
+                                {
+                                    Console.WriteLine($"You don't have enough {material.Key.Name}. Required: {material.Value}, Have: {materialCount}");
+                                    canCraft = false;
+                                    break;
+                                }
+                            }
+
+                            if (canCraft)
+                            {
+                                foreach (var material in recipe.RequiredMaterials)
+                                {
+                                    for (int i = 0; i < material.Value; i++)
+                                    {
+                                        Item itemToRemove = _player.Inventory.First(item => item.Name == material.Key.Name);
+                                        _player.Inventory.Remove(itemToRemove);
+                                    }
+                                }
+                                _player.Inventory.Add(recipe.ResultingItem);
+                                UIManager.SlowPrint($"Successfully crafted {recipe.ResultingItem.Name}!", ConsoleColor.Green);
+                            }
+                        }
+                    }
+                    break;
                 case "quit":
                     UIManager.SlowPrint("You decide to rest for now. Until next time!");
                     return; // Use 'return' to exit the application from the main context.
@@ -467,6 +552,7 @@ public class Game
                         UIManager.SlowPrint($"The {actingMonster.Name} attacks and misses!", ConsoleColor.Gray);
                     }
                 }
+                round++;
             }
         }
 
