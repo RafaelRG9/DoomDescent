@@ -3,6 +3,8 @@ public class DoubleStrike : Ability
     public DoubleStrike()
     {
         Name = "Double Strike";
+        Description = "You sly fox quick as a fox (redundant as hitting twice). Hit the target twice for 75% of your Dexterity as damage";
+        EnergyCost = 5;
     }
 
     public override void Use(Character caster, Character target)

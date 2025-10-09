@@ -503,22 +503,22 @@ public class Game
         UIManager.SlowPrint(_player.CurrentRoom.Description);
 
         // --- MONSTER OR ITEM LIST ---
-        if (_player.CurrentRoom.MonstersInRoom.Count > 0)
+        if (_player.CurrentRoom.MonstersInRoom.Any())
         {
             UIManager.SlowPrint("\nDangerous creatures lurk here:");
             foreach (Monster monster in _player.CurrentRoom.MonstersInRoom)
             {
-                UIManager.SlowPrint($"- A fearsome {monster.Name}");
+                UIManager.SlowPrint($"- A fearsome {monster.Name}", ConsoleColor.Red);
             }
         }
         else
         {
-            if (_player.CurrentRoom.ItemsInRoom.Count > 0)
+            if (_player.CurrentRoom.ItemsInRoom.Any())
             {
                 UIManager.SlowPrint("\nYou found treasure in this room:");
                 foreach (Item item in _player.CurrentRoom.ItemsInRoom)
                 {
-                    UIManager.SlowPrint($"- {item.Name}");
+                    UIManager.SlowPrint($"- {item.Name}", ConsoleColor.Green);
                 }
             }
         }

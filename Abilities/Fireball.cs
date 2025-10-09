@@ -3,6 +3,8 @@ public class Fireball : Ability
     public Fireball()
     {
         Name = "Fireball";
+        Description = "These are small rooms, what's the worst that could happen?. Hit the target with a huge fireball for 200% of Intellect as damage";
+        EnergyCost = 5;
     }
 
     public override void Use(Character caster, Character target)

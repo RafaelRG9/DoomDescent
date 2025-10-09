@@ -85,7 +85,7 @@ public class DungeonGenerator
 
                     // Update the room's description to mention the monster
                     nextRoom.Name = "Monster Room";
-                    nextRoom.Description = $"A foul smell hangs in the air. A {monsterForRoom.Name} glares at you!";
+                    nextRoom.Description = $"The air is thick with the stench of death and decay.";
                 }
                 else
                 {
@@ -94,7 +94,7 @@ public class DungeonGenerator
                     nextRoom.ItemsInRoom.Add(lootItem);
 
                     nextRoom.Name = "Treasure Room";
-                    nextRoom.Description = $"Fortune favors you! There's a {lootItem.Name} here. GO GRAB IT!";
+                    nextRoom.Description = $"You feel a sense of calm here, a brief respite from the darkness.";
                 }
 
                 // Link the new room to the current room

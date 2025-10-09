@@ -3,6 +3,7 @@ public class PowerAttack : Ability
     public PowerAttack()
     {
         Name = "Power Attack";
+        Description = "Hurr Durr Warrior hit strong. Deals 150% of Strength as damage";
         EnergyCost = 5;
     }
 
