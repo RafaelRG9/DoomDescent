@@ -85,14 +85,14 @@ public class Player : Character
     public void AddExperience(int experienceGained)
     {
         Experience += experienceGained;
-        Console.WriteLine($"You gained {experienceGained} experience!");
+        UIManager.SlowPrint($"You gained {experienceGained} experience!");
 
         while (Experience >= ExperienceToNextLevel)
         {
             // Level up!
             Level++;
             Experience -= ExperienceToNextLevel;
-            Console.WriteLine($"\n*** You have reached Level {Level}! ***");
+            UIManager.SlowPrint($"\n*** You have reached Level {Level}! ***", ConsoleColor.DarkYellow);
 
             // Increase stats, static for now but formulaic later
             int healthIncrease = 0;
@@ -128,14 +128,14 @@ public class Player : Character
             Stats["Intellect"] += intellectIncrease;
             Health = MaxHealth;
 
-            Console.WriteLine($"Max Health increased by {healthIncrease}.");
-            Console.WriteLine($"Strength increased by {strengthIncrease}.");
-            Console.WriteLine($"Dexterity increased by {dexterityIncrease}.");
-            Console.WriteLine($"Intellect increased by {intellectIncrease}.");
+            UIManager.SlowPrint($"Max Health increased by {healthIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Strength increased by {strengthIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Dexterity increased by {dexterityIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Intellect increased by {intellectIncrease}.", ConsoleColor.DarkYellow);
 
             // Calculate XP for next level
             ExperienceToNextLevel = Level * 100;
-            Console.WriteLine($"Experience to next level: {ExperienceToNextLevel}");
+            UIManager.SlowPrint($"Experience to next level: {ExperienceToNextLevel}", ConsoleColor.DarkYellow);
         }
     }
 }

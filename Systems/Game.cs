@@ -125,6 +125,7 @@ public class Game
                 case "char":
                     Console.WriteLine("\n--- Character Stats ---");
                     Console.WriteLine($" Name: {_player.Name}");
+                    Console.WriteLine($" Class: {_player.Class}");
                     Console.WriteLine($" Level: {_player.Level}");
                     Console.WriteLine($" Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
                     Console.WriteLine($" Health: {_player.Health} / {_player.MaxHealth}");
@@ -373,6 +374,8 @@ public class Game
 
             foreach (var character in turnOrder)
             {
+                character.IsDefending = false;
+
                 if (character.Health <= 0) continue;
                 if (_player.Health <= 0 || monsterToFight.Health <= 0) break;
 
@@ -380,6 +383,7 @@ public class Game
                 {
                     UIManager.SlowPrint("Your turn! Choose an action");
                     Console.WriteLine("- attack");
+                    Console.WriteLine("- defend");
                     foreach (var ability in _player.Abilities)
                     {
                         Console.WriteLine($"- {ability.Name?.ToLower()}");
@@ -409,6 +413,11 @@ public class Game
                             UIManager.SlowPrint("You swing and miss!", ConsoleColor.Gray);
                         }
                     }
+                    else if (playerChoice.Equals("defend",StringComparison.OrdinalIgnoreCase))
+                    {
+                        _player.IsDefending = true;
+                        UIManager.SlowPrint($"{_player.Name} takes a defensive stance!", ConsoleColor.White);
+                    }
                     else
                     {
                         Ability? chosenAbility = _player.Abilities.Find(a => a.Name?.Equals(playerChoice, StringComparison.OrdinalIgnoreCase) ?? false);
@@ -432,6 +441,12 @@ public class Game
                             int monsterDamage = monsterToFight.Stats["Strength"];
                             int playerDefense = _player.GetTotalDefense();
                             int damageToPlayer = monsterDamage - playerDefense;
+
+                            if (_player.IsDefending)
+                            {
+                                damageToPlayer /= 2;
+                                UIManager.SlowPrint($"{_player.Name} braces for the hit!", ConsoleColor.White);
+                            }
 
                             // Ensure at least 1 damage is dealt
                             if (damageToPlayer < 1)
