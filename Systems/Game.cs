@@ -401,7 +401,10 @@ public class Game
                     // Process Player's Action
                     if (playerChoice.Equals("attack", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (random.Next(20) + _player.Stats["Dexterity"] > 10)
+                        int attackRoll = random.Next(1, 21) + _player.Stats["Dexterity"];
+                        int evasionClass = 10 + monsterToFight.Stats["Dexterity"];
+
+                        if (attackRoll >= evasionClass)
                         {
                             // Calculate damage based on player strength and weapon
                             int damageDealt = _player.GetTotalStrength();
@@ -413,7 +416,7 @@ public class Game
                             UIManager.SlowPrint("You swing and miss!", ConsoleColor.Gray);
                         }
                     }
-                    else if (playerChoice.Equals("defend",StringComparison.OrdinalIgnoreCase))
+                    else if (playerChoice.Equals("defend", StringComparison.OrdinalIgnoreCase))
                     {
                         _player.IsDefending = true;
                         UIManager.SlowPrint($"{_player.Name} takes a defensive stance!", ConsoleColor.White);
@@ -433,35 +436,35 @@ public class Game
                 }
                 else if (character is Monster actingMonster)
                 {
-                    if (monsterToFight.Health > 0)
+                    // --- NEW TO-HIT LOGIC FOR MONSTER ---
+                    int attackRoll = random.Next(1, 21) + actingMonster.Stats["Dexterity"];
+                    int evasionClass = 10 + _player.Stats["Dexterity"];
+
+                    if (attackRoll >= evasionClass)
                     {
-                        if (random.Next(20) + monsterToFight.Stats["Dexterity"] > 10)
+                        // It's a hit!
+                        int monsterDamage = actingMonster.Stats["Strength"];
+                        int playerDefense = _player.GetTotalDefense();
+                        int damageToPlayer = monsterDamage - playerDefense;
+
+                        if (_player.IsDefending)
                         {
-                            // Calculate damage to player based on monster strength and player defense
-                            int monsterDamage = monsterToFight.Stats["Strength"];
-                            int playerDefense = _player.GetTotalDefense();
-                            int damageToPlayer = monsterDamage - playerDefense;
-
-                            if (_player.IsDefending)
-                            {
-                                damageToPlayer /= 2;
-                                UIManager.SlowPrint($"{_player.Name} braces for the hit!", ConsoleColor.White);
-                            }
-
-                            // Ensure at least 1 damage is dealt
-                            if (damageToPlayer < 1)
-                            {
-                                damageToPlayer = 1;
-                            }
-
-                            // Deal damage to player
-                            _player.Health -= damageToPlayer;
-                            UIManager.SlowPrint($"The {monsterToFight.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                            damageToPlayer /= 2;
+                            UIManager.SlowPrint($"{_player.Name} braces for the hit!", ConsoleColor.White);
                         }
-                        else
+
+                        if (damageToPlayer < 1)
                         {
-                            UIManager.SlowPrint($"The {monsterToFight.Name} attacks and misses!", ConsoleColor.Gray);
+                            damageToPlayer = 1;
                         }
+
+                        _player.Health -= damageToPlayer;
+                        UIManager.SlowPrint($"The {actingMonster.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                    }
+                    else
+                    {
+                        // It's a miss.
+                        UIManager.SlowPrint($"The {actingMonster.Name} attacks and misses!", ConsoleColor.Gray);
                     }
                 }
             }
