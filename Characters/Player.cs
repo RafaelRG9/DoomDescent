@@ -31,6 +31,7 @@ public class Player : Character
         {
             case PlayerClass.Warrior:
                 MaxHealth = 80;
+                MaxEnergy = 10;
                 Stats["Strength"] = 12;
                 Stats["Dexterity"] = 4;
                 Stats["Intellect"] = 3;
@@ -38,6 +39,7 @@ public class Player : Character
                 break;
             case PlayerClass.Rogue:
                 MaxHealth = 60;
+                MaxEnergy = 25;
                 Stats["Strength"] = 8;
                 Stats["Dexterity"] = 10;
                 Stats["Intellect"] = 5;
@@ -45,6 +47,7 @@ public class Player : Character
                 break;
             case PlayerClass.Mage:
                 MaxHealth = 50;
+                MaxEnergy = 50;
                 Stats["Strength"] = 5;
                 Stats["Dexterity"] = 6;
                 Stats["Intellect"] = 12;

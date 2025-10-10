@@ -132,11 +132,17 @@ public class Game
                     Console.WriteLine($" Level: {_player.Level}");
                     Console.WriteLine($" Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
                     Console.WriteLine($" Health: {_player.Health} / {_player.MaxHealth}");
+                    Console.WriteLine($" Energy: {_player.Energy} / {_player.MaxEnergy}");
                     Console.WriteLine("-----------------------");
                     Console.WriteLine(" Attributes:");
                     foreach (var stat in _player.Stats)
                     {
                         Console.WriteLine($" - {stat.Key}: {stat.Value}");
+                    }
+                    Console.WriteLine(" Abilities:");
+                    foreach(var ability in _player.Abilities)
+                    {
+                        Console.WriteLine($" - {ability.Name}(Cost: {ability.EnergyCost}): {ability.Description}");
                     }
                     Console.WriteLine("-----------------------");
                     break;
@@ -510,12 +516,17 @@ public class Game
 
                 if (character is Player)
                 {
+                    _player.Energy += 5;
+                    if (_player.Energy == _player.MaxEnergy)
+                    {
+                        _player.Energy = _player.MaxEnergy;
+                    }
                     UIManager.SlowPrint("Your turn! Choose an action");
                     Console.WriteLine("- attack");
                     Console.WriteLine("- defend");
                     foreach (var ability in _player.Abilities)
                     {
-                        Console.WriteLine($"- {ability.Name?.ToLower()}");
+                        Console.WriteLine($"- {ability.Name?.ToLower()} (Cost: {ability.EnergyCost})");
                     }
                     Console.Write("> ");
                     string? playerChoice = Console.ReadLine();
@@ -555,7 +566,15 @@ public class Game
                         Ability? chosenAbility = _player.Abilities.Find(a => a.Name?.Equals(playerChoice, StringComparison.OrdinalIgnoreCase) ?? false);
                         if (chosenAbility != null)
                         {
-                            chosenAbility.Use(_player, monsterToFight);
+                            if (_player.Energy >= chosenAbility.EnergyCost)
+                            {
+                                chosenAbility.Use(_player, monsterToFight);
+                                _player.Energy -= chosenAbility.EnergyCost;
+                            }
+                            else
+                            {
+                                UIManager.SlowPrint("Fool, you do not have anough energy, can't you read?");
+                            }
                         }
                         else
                         {

@@ -5,6 +5,8 @@ public abstract class Character
     public string Name { get; set; }
     public int Health { get; set; }
     public int MaxHealth { get; set; }
+    public int Energy { get; set; }
+    public int MaxEnergy { get; set; }
     public Dictionary<string, int> Stats { get; private set; }
     public bool IsDefending { get; set; }
 

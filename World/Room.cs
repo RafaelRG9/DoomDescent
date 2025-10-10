@@ -19,8 +19,6 @@ public class Room
     public Room? East { get; set; }
     public Room? West { get; set; }
 
-    // TODO: Add a list of Monsters and Items
-
     public Room(int x, int y)
     {
         X = x;

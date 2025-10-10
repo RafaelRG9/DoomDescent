@@ -106,6 +106,7 @@ namespace csharp_roguelike_rpg.Characters;
 
 public abstract class Character
 {
+    // TODO Add Energy to have Abilities energy cost be used in combat, this should be the last thing to complete the game
     public string Name { get; set; }
     public int Health { get; set; }
     public int MaxHealth { get; set; }
@@ -132,7 +133,7 @@ namespace csharp_roguelike_rpg.Characters;
 public class Goblin : Monster
 {
     public Goblin(Item? loot)
-        : base("Goblin", 20, 8, 3, 50, 3, loot)
+        : base("Goblin", 20, 8, 3, 3, 50, loot)
     {
 
     }
@@ -144,15 +145,48 @@ namespace csharp_roguelike_rpg.Characters;
 
 public class Monster : Character
 {
+    public int Level { get; private set; }
     public Item? Loot { get; set; }
     public int ExperienceValue { get; set; }
 
     public Monster(string name, int health, int strength, int dexterity, int experience, int intellect, Item? loot = null)
         : base(name, health, strength, dexterity, intellect)
     {
+        Level = 1;
         ExperienceValue = experience;
         Loot = loot;
     }
+
+    public Monster(Monster other)
+        : base(other.Name, other.MaxHealth, other.Stats["Strength"], other.Stats["Dexterity"], other.Stats["Intellect"])
+    {
+        ExperienceValue = other.ExperienceValue;
+        Loot = other.Loot;
+        Level = other.Level;
+    }
+
+    public Monster Clone()
+    {
+        return new Monster(this);
+    }
+
+    public void ScaleStats(int level)
+{
+    Level = level;
+    
+    // Get the original base stats from the constructor
+    int baseHealth = MaxHealth;
+    int baseStrength = Stats["Strength"];
+    int baseDexterity = Stats["Dexterity"];
+    int baseIntellect = Stats["Intellect"];
+
+    // Apply the scaling formula
+    MaxHealth = baseHealth + (level * 5);
+    Health = MaxHealth;
+    Stats["Strength"] = baseStrength + (level * 2);
+    Stats["Dexterity"] = baseDexterity + (level * 1);
+    Stats["Intellect"] = baseIntellect + (level * 1);
+}
 }
 --- Characters/Orc.cs ---
 using csharp_roguelike_rpg.Items;
@@ -256,19 +290,19 @@ public class Player : Character
         return totalDefense;
     }
 
-    public void AddExperience(int experienceGained)
+    public bool AddExperience(int experienceGained)
     {
         Experience += experienceGained;
-        UIManager.SlowPrint($"You gained {experienceGained} experience!");
+        bool leveledUp = false;
 
         while (Experience >= ExperienceToNextLevel)
         {
             // Level up!
+            leveledUp = true;
             Level++;
             Experience -= ExperienceToNextLevel;
-            UIManager.SlowPrint($"\n*** You have reached Level {Level}! ***", ConsoleColor.DarkYellow);
 
-            // Increase stats, static for now but formulaic later
+            // --- Class-based stat increases ---
             int healthIncrease = 0;
             int strengthIncrease = 0;
             int dexterityIncrease = 0;
@@ -301,16 +335,9 @@ public class Player : Character
             Stats["Dexterity"] += dexterityIncrease;
             Stats["Intellect"] += intellectIncrease;
             Health = MaxHealth;
-
-            UIManager.SlowPrint($"Max Health increased by {healthIncrease}.", ConsoleColor.DarkYellow);
-            UIManager.SlowPrint($"Strength increased by {strengthIncrease}.", ConsoleColor.DarkYellow);
-            UIManager.SlowPrint($"Dexterity increased by {dexterityIncrease}.", ConsoleColor.DarkYellow);
-            UIManager.SlowPrint($"Intellect increased by {intellectIncrease}.", ConsoleColor.DarkYellow);
-
-            // Calculate XP for next level
             ExperienceToNextLevel = Level * 100;
-            UIManager.SlowPrint($"Experience to next level: {ExperienceToNextLevel}", ConsoleColor.DarkYellow);
         }
+        return leveledUp;
     }
 }
 --- DESIGN.md ---
@@ -389,6 +416,7 @@ using csharp_roguelike_rpg.Systems;
 
 public class GameData
 {
+    public Item? StairsDown { get; private set; }
     public List<Item> MasterLootTable { get; private set; }
     public List<Monster> MasterMonsterTable { get; private set; }
     public List<Monster> MasterBossTable { get; private set; }
@@ -406,11 +434,16 @@ public class GameData
 
         // --- CRAFTED ITEMS AND MATERIALS ---
 
-        // Materials
+        // Materials and Monster Drops
         Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
+        Item orcTusk = new Item("Orc Tusk", "A sharp, yellowed tusk. A brutal trophy.");
+        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "A wicked dagger crafted from a dragon's claw.", 15);
 
         // Crafted Items
         Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
+
+        // --- SPECIAL ITEMS ---
+        Item StairsDown = new Item("Stairs Down", "A staircase leading deeper into the darkness...");
 
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -422,15 +455,16 @@ public class GameData
         MasterLootTable.Add(new Weapon("Rusty Sword", "An old sword, as sharp as rolling pin!. At least it could give Tetanus", 2));
         MasterLootTable.Add(new Potion("Small Potion", "Wouldn't hurt to drink this, wouldn't help either (Restores 20 health, impressive...)", 20));
         MasterLootTable.Add(goblinHide);
+        MasterLootTable.Add(orcTusk);
 
 
         // --- MASTER MONSTER TABLE ---
         MasterMonsterTable.Add(new Goblin(goblinHide));
-        MasterMonsterTable.Add(new Orc(null));
+        MasterMonsterTable.Add(new Orc(orcTusk));
 
 
         // --- MASTER BOSS TABLE ---
-        MasterBossTable.Add(new Boss(null));
+        MasterBossTable.Add(new Boss(dragonClaw));
 
         // --- CRAFTING TABLE ---
         CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>
@@ -625,6 +659,7 @@ public enum EquipmentSlot
 }
 --- Systems/Game.cs ---
 namespace csharp_roguelike_rpg.Systems;
+
 using csharp_roguelike_rpg.Abilities;
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
@@ -636,6 +671,7 @@ public class Game
     private Player _player = null!;
     private DungeonGenerator _generator;
     private GameData _gameData;
+    private int _currentFloor;
 
     public Game()
     {
@@ -645,6 +681,7 @@ public class Game
 
     private void SetupNewGame()
     {
+        _currentFloor = 1;
         Console.Clear();
         UIManager.SlowPrint("WELCOME TO YOUR DOOM!");
 
@@ -686,14 +723,14 @@ public class Game
         UIManager.SlowPrint($"So, you will be playing the {chosenClass}? Good luck, you'll need it...");
 
         // --- WORLD AND PLAYER CREATION ---
-        Room startingRoom = _generator.Generate(10);
+        Room startingRoom = _generator.Generate(10, _currentFloor);
         _player = new Player(playerName, chosenClass);
         _player.CurrentRoom = startingRoom;
         _player.VisitedRooms.Add(startingRoom);
     }
 
 
-    private void GameLoop()
+    private bool GameLoop()
     {
         while (true)
         {
@@ -719,20 +756,25 @@ public class Game
                 case "west":
                     if (_player.CurrentRoom != null)
                     {
+                        bool playerIsAlive = true;
                         switch (verb)
                         {
                             case "north":
-                                MovePlayer(_player.CurrentRoom.North);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.North);
                                 break;
                             case "south":
-                                MovePlayer(_player.CurrentRoom.South);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.South);
                                 break;
                             case "east":
-                                MovePlayer(_player.CurrentRoom.East);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.East);
                                 break;
                             case "west":
-                                MovePlayer(_player.CurrentRoom.West);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.West);
                                 break;
+                        }
+                        if (!playerIsAlive)
+                        {
+                            return false;
                         }
                     }
                     break;
@@ -1022,9 +1064,22 @@ public class Game
                         }
                     }
                     break;
+                case "descend":
+                case "down":
+                    if (_gameData.StairsDown != null &&
+                        _player.CurrentRoom != null &&
+                        _player.CurrentRoom.ItemsInRoom.Contains(_gameData.StairsDown))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        UIManager.SlowPrint("There is nowhere to descend to here.");
+                    }
+                    break;
                 case "quit":
                     UIManager.SlowPrint("You decide to rest for now. Until next time!");
-                    return; // Use 'return' to exit the application from the main context.
+                    return false;
 
                 default:
                     Console.WriteLine("I don't understand that command.");
@@ -1037,15 +1092,36 @@ public class Game
         while (true)
         {
             SetupNewGame();
-            DescribeRoom();
-            GameLoop();
 
+            while (true) // Master "Play Again?" loop
+            {
+                DescribeRoom();
+                bool descend = GameLoop(); // True if player descends, false if they quit
+
+                if (descend)
+                {
+                    _currentFloor++;
+                    UIManager.SlowPrint($"You descend to floor {_currentFloor}...", ConsoleColor.Magenta);
+
+                    // Re-generate the world for the new floor
+                    Room startingRoom = _generator.Generate(10, _currentFloor);
+                    _player.CurrentRoom = startingRoom;
+                    _player.VisitedRooms.Clear(); // Clear the map for the new floor
+                    _player.VisitedRooms.Add(startingRoom);
+                }
+                else
+                {
+                    // If they didn't descend (i.e., they quit), break the inner floor loop
+                    break;
+                }
+            }
+
+            // This is only reached if the inner loop was broken (by quitting or dying)
             UIManager.SlowPrint("\nPlay Again? (y/n)");
             string? playAgain = Console.ReadLine();
-
             if (playAgain?.ToLower() != "y")
             {
-                break;
+                break; // Exit the master "Play Again?" loop
             }
         }
         UIManager.SlowPrint("Thanks for playing!");
@@ -1190,13 +1266,29 @@ public class Game
         if (_player.Health > 0)
         {
             UIManager.SlowPrint($"You defeated the {monsterToFight.Name}!");
+
+            // If Monster is a boss, spawn the stairs
+            if (monsterToFight is Boss && _player.CurrentRoom != null)
+            {
+                if (_gameData.StairsDown != null)
+                {
+                    UIManager.SlowPrint("A staircase reveals itself in the back of the room!", ConsoleColor.Yellow);
+                    _player.CurrentRoom.ItemsInRoom.Add(_gameData.StairsDown);
+                }
+            }
             if (monsterToFight.Loot != null)
             {
                 UIManager.SlowPrint($"You found a {monsterToFight.Loot.Name}!");
                 _player.Inventory.Add(monsterToFight.Loot);
             }
-            _player.AddExperience(monsterToFight.ExperienceValue);
 
+            // Calculate experience and level up
+            bool leveledUp = _player.AddExperience(monsterToFight.ExperienceValue);
+            if (leveledUp)
+            {
+                UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
+                HandleTalentSelection();
+            }
             return true;
         }
         else
@@ -1238,7 +1330,7 @@ public class Game
         }
     }
 
-    private void MovePlayer(Room? newRoom)
+    private bool MovePlayer(Room? newRoom)
     {
         if (newRoom != null)
         {
@@ -1248,7 +1340,9 @@ public class Game
             DescribeRoom();
 
             // Trigger combat if it is a monster room
-            while (_player.CurrentRoom.MonstersInRoom.Count > 0 && _player.Health > 0)
+            while (_player.CurrentRoom != null &&
+                    _player.CurrentRoom.MonstersInRoom.Count > 0 &&
+                    _player.Health > 0)
             {
                 Monster monster = _player.CurrentRoom.MonstersInRoom[0];
                 bool playerWon = StartCombat(monster);
@@ -1258,7 +1352,7 @@ public class Game
                 }
                 else
                 {
-                    break;
+                    return false;
                 }
             }
         }
@@ -1266,6 +1360,7 @@ public class Game
         {
             Console.WriteLine("You can't go that way.");
         }
+        return true;
     }
 
     private void DrawMap()
@@ -1310,6 +1405,47 @@ public class Game
             Console.WriteLine(line);
         }
         Console.WriteLine("-------------------");
+    }
+
+    private void HandleTalentSelection()
+    {
+        // Check if there are any talents defined for the player's current class and level.
+        if (_gameData.ClassTalents.ContainsKey(_player.Class) &&
+            _gameData.ClassTalents[_player.Class].ContainsKey(_player.Level))
+        {
+            UIManager.SlowPrint("You have a new talent point to spend!", ConsoleColor.Magenta);
+
+            // Get the list of available talents for this tier.
+            var availableTalents = _gameData.ClassTalents[_player.Class][_player.Level];
+
+            while (true)
+            {
+                UIManager.SlowPrint("Choose your talent:", ConsoleColor.Magenta);
+                // Display the options
+                for (int i = 0; i < availableTalents.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {availableTalents[i].Name} - {availableTalents[i].Description}");
+                }
+
+                Console.Write("> ");
+                string? input = Console.ReadLine();
+
+                // Try to parse the input as a number
+                if (int.TryParse(input, out int choice) && choice > 0 && choice <= availableTalents.Count)
+                {
+                    // Get the chosen modifier
+                    Modifier chosenTalent = availableTalents[choice - 1];
+
+                    // Apply it to the player
+                    chosenTalent.Apply(_player);
+                    break; // Exit the selection loop
+                }
+                else
+                {
+                    Console.WriteLine("Invalid choice.");
+                }
+            }
+        }
     }
 }
 --- Systems/Modifier.cs ---
@@ -1406,7 +1542,7 @@ public class DungeonGenerator
         _gameData = gameData;
     }
 
-    public Room Generate(int numberOfRooms)
+    public Room Generate(int numberOfRooms, int floorLevel)
     {
         // --- INITIALIZATION ---
         var map = new Dictionary<string, Room>();
@@ -1444,21 +1580,23 @@ public class DungeonGenerator
                 // --- MONSTER & ITEM SPAWNING ---
                 if (i == numberOfRooms - 2)
                 {
-                    // ---- SPAWN THE BOSS ---
-                    int randomIndex = _random.Next(_gameData.MasterBossTable.Count);
-                    Monster randomBoss = _gameData.MasterBossTable[randomIndex];
-                    Monster BossForRoom = new Monster(randomBoss.Name, randomBoss.MaxHealth, randomBoss.Stats["Strength"], randomBoss.Stats["Dexterity"], randomBoss.ExperienceValue, randomBoss.Stats["Intellect"], randomBoss.Loot);
-                    nextRoom.MonstersInRoom.Add(BossForRoom);
+                    // --- SPAWN THE BOSS ---
+                    Monster bossTemplate = _gameData.MasterBossTable[0];
+                    Monster bossForRoom = bossTemplate.Clone(); // Clone the template
+                    bossForRoom.ScaleStats(floorLevel);         // Scale the clone
+                    nextRoom.MonstersInRoom.Add(bossForRoom);
+
+                    nextRoom.Name = "Boss Chamber";
+                    nextRoom.Description = $"A massive {bossForRoom.Name} roars, shaking the very foundations of the dungeon!";
                 }
                 else if (_random.Next(100) < 50)
                 {
-                    // define loot, create monster, and add to room's list
-                    int randomIndex = _random.Next(_gameData.MasterMonsterTable.Count);
-                    Monster randomMonster = _gameData.MasterMonsterTable[randomIndex];
-                    Monster monsterForRoom = new Monster(randomMonster.Name, randomMonster.MaxHealth, randomMonster.Stats["Strength"], randomMonster.Stats["Dexterity"], randomMonster.ExperienceValue, randomMonster.Stats["Intellect"], randomMonster.Loot);
+                    // --- SPAWN A RANDOM MONSTER ---
+                    Monster monsterTemplate = _gameData.MasterMonsterTable[_random.Next(_gameData.MasterMonsterTable.Count)];
+                    Monster monsterForRoom = monsterTemplate.Clone(); // Clone the template
+                    monsterForRoom.ScaleStats(floorLevel);          // Scale the clone
                     nextRoom.MonstersInRoom.Add(monsterForRoom);
 
-                    // Update the room's description to mention the monster
                     nextRoom.Name = "Monster Room";
                     nextRoom.Description = $"The air is thick with the stench of death and decay.";
                 }
@@ -1530,8 +1668,6 @@ public class Room
     public Room? South { get; set; }
     public Room? East { get; set; }
     public Room? West { get; set; }
-
-    // TODO: Add a list of Monsters and Items
 
     public Room(int x, int y)
     {

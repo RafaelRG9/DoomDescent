@@ -24,8 +24,8 @@ public class GameData
 
         // Materials and Monster Drops
         Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
-        Item orcTusk = new Item("Orc Tusk", "A sharp, yellowed tusk. A brutal trophy.");
-        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "A wicked dagger crafted from a dragon's claw.", 15);
+        Item orcTusk = new Item("Orc Tusk", "surprisingly clean, this Orc flossed!");
+        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "Nothing says baddass like a DRAGON CLAW for a weapon. Deals 15 damage.", 15);
 
         // Crafted Items
         Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
