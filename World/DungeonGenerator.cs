@@ -12,7 +12,7 @@ public class DungeonGenerator
         _gameData = gameData;
     }
 
-    public Room Generate(int numberOfRooms)
+    public Room Generate(int numberOfRooms, int floorLevel)
     {
         // --- INITIALIZATION ---
         var map = new Dictionary<string, Room>();
@@ -50,21 +50,23 @@ public class DungeonGenerator
                 // --- MONSTER & ITEM SPAWNING ---
                 if (i == numberOfRooms - 2)
                 {
-                    // ---- SPAWN THE BOSS ---
-                    int randomIndex = _random.Next(_gameData.MasterBossTable.Count);
-                    Monster randomBoss = _gameData.MasterBossTable[randomIndex];
-                    Monster BossForRoom = new Monster(randomBoss.Name, randomBoss.MaxHealth, randomBoss.Stats["Strength"], randomBoss.Stats["Dexterity"], randomBoss.ExperienceValue, randomBoss.Stats["Intellect"], randomBoss.Loot);
-                    nextRoom.MonstersInRoom.Add(BossForRoom);
+                    // --- SPAWN THE BOSS ---
+                    Monster bossTemplate = _gameData.MasterBossTable[0];
+                    Monster bossForRoom = bossTemplate.Clone(); // Clone the template
+                    bossForRoom.ScaleStats(floorLevel);         // Scale the clone
+                    nextRoom.MonstersInRoom.Add(bossForRoom);
+
+                    nextRoom.Name = "Boss Chamber";
+                    nextRoom.Description = $"A massive {bossForRoom.Name} roars, shaking the very foundations of the dungeon!";
                 }
                 else if (_random.Next(100) < 50)
                 {
-                    // define loot, create monster, and add to room's list
-                    int randomIndex = _random.Next(_gameData.MasterMonsterTable.Count);
-                    Monster randomMonster = _gameData.MasterMonsterTable[randomIndex];
-                    Monster monsterForRoom = new Monster(randomMonster.Name, randomMonster.MaxHealth, randomMonster.Stats["Strength"], randomMonster.Stats["Dexterity"], randomMonster.ExperienceValue, randomMonster.Stats["Intellect"], randomMonster.Loot);
+                    // --- SPAWN A RANDOM MONSTER ---
+                    Monster monsterTemplate = _gameData.MasterMonsterTable[_random.Next(_gameData.MasterMonsterTable.Count)];
+                    Monster monsterForRoom = monsterTemplate.Clone(); // Clone the template
+                    monsterForRoom.ScaleStats(floorLevel);          // Scale the clone
                     nextRoom.MonstersInRoom.Add(monsterForRoom);
 
-                    // Update the room's description to mention the monster
                     nextRoom.Name = "Monster Room";
                     nextRoom.Description = $"The air is thick with the stench of death and decay.";
                 }

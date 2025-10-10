@@ -11,6 +11,7 @@ public class Game
     private Player _player = null!;
     private DungeonGenerator _generator;
     private GameData _gameData;
+    private int _currentFloor;
 
     public Game()
     {
@@ -20,6 +21,7 @@ public class Game
 
     private void SetupNewGame()
     {
+        _currentFloor = 1;
         Console.Clear();
         UIManager.SlowPrint("WELCOME TO YOUR DOOM!");
 
@@ -61,14 +63,14 @@ public class Game
         UIManager.SlowPrint($"So, you will be playing the {chosenClass}? Good luck, you'll need it...");
 
         // --- WORLD AND PLAYER CREATION ---
-        Room startingRoom = _generator.Generate(10);
+        Room startingRoom = _generator.Generate(10, _currentFloor);
         _player = new Player(playerName, chosenClass);
         _player.CurrentRoom = startingRoom;
         _player.VisitedRooms.Add(startingRoom);
     }
 
 
-    private void GameLoop()
+    private bool GameLoop()
     {
         while (true)
         {
@@ -94,20 +96,25 @@ public class Game
                 case "west":
                     if (_player.CurrentRoom != null)
                     {
+                        bool playerIsAlive = true;
                         switch (verb)
                         {
                             case "north":
-                                MovePlayer(_player.CurrentRoom.North);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.North);
                                 break;
                             case "south":
-                                MovePlayer(_player.CurrentRoom.South);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.South);
                                 break;
                             case "east":
-                                MovePlayer(_player.CurrentRoom.East);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.East);
                                 break;
                             case "west":
-                                MovePlayer(_player.CurrentRoom.West);
+                                playerIsAlive = MovePlayer(_player.CurrentRoom.West);
                                 break;
+                        }
+                        if (!playerIsAlive)
+                        {
+                            return false;
                         }
                     }
                     break;
@@ -397,9 +404,22 @@ public class Game
                         }
                     }
                     break;
+                case "descend":
+                case "down":
+                    if (_gameData.StairsDown != null &&
+                        _player.CurrentRoom != null &&
+                        _player.CurrentRoom.ItemsInRoom.Contains(_gameData.StairsDown))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        UIManager.SlowPrint("There is nowhere to descend to here.");
+                    }
+                    break;
                 case "quit":
                     UIManager.SlowPrint("You decide to rest for now. Until next time!");
-                    return; // Use 'return' to exit the application from the main context.
+                    return false;
 
                 default:
                     Console.WriteLine("I don't understand that command.");
@@ -412,15 +432,36 @@ public class Game
         while (true)
         {
             SetupNewGame();
-            DescribeRoom();
-            GameLoop();
 
+            while (true) // Master "Play Again?" loop
+            {
+                DescribeRoom();
+                bool descend = GameLoop(); // True if player descends, false if they quit
+
+                if (descend)
+                {
+                    _currentFloor++;
+                    UIManager.SlowPrint($"You descend to floor {_currentFloor}...", ConsoleColor.Magenta);
+
+                    // Re-generate the world for the new floor
+                    Room startingRoom = _generator.Generate(10, _currentFloor);
+                    _player.CurrentRoom = startingRoom;
+                    _player.VisitedRooms.Clear(); // Clear the map for the new floor
+                    _player.VisitedRooms.Add(startingRoom);
+                }
+                else
+                {
+                    // If they didn't descend (i.e., they quit), break the inner floor loop
+                    break;
+                }
+            }
+
+            // This is only reached if the inner loop was broken (by quitting or dying)
             UIManager.SlowPrint("\nPlay Again? (y/n)");
             string? playAgain = Console.ReadLine();
-
             if (playAgain?.ToLower() != "y")
             {
-                break;
+                break; // Exit the master "Play Again?" loop
             }
         }
         UIManager.SlowPrint("Thanks for playing!");
@@ -565,6 +606,16 @@ public class Game
         if (_player.Health > 0)
         {
             UIManager.SlowPrint($"You defeated the {monsterToFight.Name}!");
+
+            // If Monster is a boss, spawn the stairs
+            if (monsterToFight is Boss && _player.CurrentRoom != null)
+            {
+                if (_gameData.StairsDown != null)
+                {
+                    UIManager.SlowPrint("A staircase reveals itself in the back of the room!", ConsoleColor.Yellow);
+                    _player.CurrentRoom.ItemsInRoom.Add(_gameData.StairsDown);
+                }
+            }
             if (monsterToFight.Loot != null)
             {
                 UIManager.SlowPrint($"You found a {monsterToFight.Loot.Name}!");
@@ -619,7 +670,7 @@ public class Game
         }
     }
 
-    private void MovePlayer(Room? newRoom)
+    private bool MovePlayer(Room? newRoom)
     {
         if (newRoom != null)
         {
@@ -629,7 +680,9 @@ public class Game
             DescribeRoom();
 
             // Trigger combat if it is a monster room
-            while (_player.CurrentRoom.MonstersInRoom.Count > 0 && _player.Health > 0)
+            while (_player.CurrentRoom != null &&
+                    _player.CurrentRoom.MonstersInRoom.Count > 0 &&
+                    _player.Health > 0)
             {
                 Monster monster = _player.CurrentRoom.MonstersInRoom[0];
                 bool playerWon = StartCombat(monster);
@@ -639,7 +692,7 @@ public class Game
                 }
                 else
                 {
-                    break;
+                    return false;
                 }
             }
         }
@@ -647,6 +700,7 @@ public class Game
         {
             Console.WriteLine("You can't go that way.");
         }
+        return true;
     }
 
     private void DrawMap()

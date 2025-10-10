@@ -4,6 +4,7 @@ using csharp_roguelike_rpg.Systems;
 
 public class GameData
 {
+    public Item? StairsDown { get; private set; }
     public List<Item> MasterLootTable { get; private set; }
     public List<Monster> MasterMonsterTable { get; private set; }
     public List<Monster> MasterBossTable { get; private set; }
@@ -21,11 +22,16 @@ public class GameData
 
         // --- CRAFTED ITEMS AND MATERIALS ---
 
-        // Materials
+        // Materials and Monster Drops
         Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
+        Item orcTusk = new Item("Orc Tusk", "A sharp, yellowed tusk. A brutal trophy.");
+        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "A wicked dagger crafted from a dragon's claw.", 15);
 
         // Crafted Items
         Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
+
+        // --- SPECIAL ITEMS ---
+        Item StairsDown = new Item("Stairs Down", "A staircase leading deeper into the darkness...");
 
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,15 +43,16 @@ public class GameData
         MasterLootTable.Add(new Weapon("Rusty Sword", "An old sword, as sharp as rolling pin!. At least it could give Tetanus", 2));
         MasterLootTable.Add(new Potion("Small Potion", "Wouldn't hurt to drink this, wouldn't help either (Restores 20 health, impressive...)", 20));
         MasterLootTable.Add(goblinHide);
+        MasterLootTable.Add(orcTusk);
 
 
         // --- MASTER MONSTER TABLE ---
         MasterMonsterTable.Add(new Goblin(goblinHide));
-        MasterMonsterTable.Add(new Orc(null));
+        MasterMonsterTable.Add(new Orc(orcTusk));
 
 
         // --- MASTER BOSS TABLE ---
-        MasterBossTable.Add(new Boss(null));
+        MasterBossTable.Add(new Boss(dragonClaw));
 
         // --- CRAFTING TABLE ---
         CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>
