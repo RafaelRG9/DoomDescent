@@ -1,4 +1,5 @@
 namespace csharp_roguelike_rpg.Systems;
+
 using csharp_roguelike_rpg.Abilities;
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
@@ -569,8 +570,14 @@ public class Game
                 UIManager.SlowPrint($"You found a {monsterToFight.Loot.Name}!");
                 _player.Inventory.Add(monsterToFight.Loot);
             }
-            _player.AddExperience(monsterToFight.ExperienceValue);
 
+            // Calculate experience and level up
+            bool leveledUp = _player.AddExperience(monsterToFight.ExperienceValue);
+            if (leveledUp)
+            {
+                UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
+                HandleTalentSelection();
+            }
             return true;
         }
         else
@@ -684,5 +691,46 @@ public class Game
             Console.WriteLine(line);
         }
         Console.WriteLine("-------------------");
+    }
+
+    private void HandleTalentSelection()
+    {
+        // Check if there are any talents defined for the player's current class and level.
+        if (_gameData.ClassTalents.ContainsKey(_player.Class) &&
+            _gameData.ClassTalents[_player.Class].ContainsKey(_player.Level))
+        {
+            UIManager.SlowPrint("You have a new talent point to spend!", ConsoleColor.Magenta);
+
+            // Get the list of available talents for this tier.
+            var availableTalents = _gameData.ClassTalents[_player.Class][_player.Level];
+
+            while (true)
+            {
+                UIManager.SlowPrint("Choose your talent:", ConsoleColor.Magenta);
+                // Display the options
+                for (int i = 0; i < availableTalents.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {availableTalents[i].Name} - {availableTalents[i].Description}");
+                }
+
+                Console.Write("> ");
+                string? input = Console.ReadLine();
+
+                // Try to parse the input as a number
+                if (int.TryParse(input, out int choice) && choice > 0 && choice <= availableTalents.Count)
+                {
+                    // Get the chosen modifier
+                    Modifier chosenTalent = availableTalents[choice - 1];
+
+                    // Apply it to the player
+                    chosenTalent.Apply(_player);
+                    break; // Exit the selection loop
+                }
+                else
+                {
+                    Console.WriteLine("Invalid choice.");
+                }
+            }
+        }
     }
 }

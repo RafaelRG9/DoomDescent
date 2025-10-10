@@ -87,19 +87,19 @@ public class Player : Character
         return totalDefense;
     }
 
-    public void AddExperience(int experienceGained)
+    public bool AddExperience(int experienceGained)
     {
         Experience += experienceGained;
-        UIManager.SlowPrint($"You gained {experienceGained} experience!");
+        bool leveledUp = false;
 
         while (Experience >= ExperienceToNextLevel)
         {
             // Level up!
+            leveledUp = true;
             Level++;
             Experience -= ExperienceToNextLevel;
-            UIManager.SlowPrint($"\n*** You have reached Level {Level}! ***", ConsoleColor.DarkYellow);
 
-            // Increase stats, static for now but formulaic later
+            // --- Class-based stat increases ---
             int healthIncrease = 0;
             int strengthIncrease = 0;
             int dexterityIncrease = 0;
@@ -132,15 +132,8 @@ public class Player : Character
             Stats["Dexterity"] += dexterityIncrease;
             Stats["Intellect"] += intellectIncrease;
             Health = MaxHealth;
-
-            UIManager.SlowPrint($"Max Health increased by {healthIncrease}.", ConsoleColor.DarkYellow);
-            UIManager.SlowPrint($"Strength increased by {strengthIncrease}.", ConsoleColor.DarkYellow);
-            UIManager.SlowPrint($"Dexterity increased by {dexterityIncrease}.", ConsoleColor.DarkYellow);
-            UIManager.SlowPrint($"Intellect increased by {intellectIncrease}.", ConsoleColor.DarkYellow);
-
-            // Calculate XP for next level
             ExperienceToNextLevel = Level * 100;
-            UIManager.SlowPrint($"Experience to next level: {ExperienceToNextLevel}", ConsoleColor.DarkYellow);
         }
+        return leveledUp;
     }
 }
