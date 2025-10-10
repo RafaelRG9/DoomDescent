@@ -1,0 +1,1558 @@
+git ls-files | grep -E "\.(cs|md|json|csproj)$" | xargs -I {} sh -c 'echo "--- {} ---"; cat {}; echo ""' > project_snapshot.txt
+
+--- .vscode/settings.json ---
+{}
+--- Abilities/Ability.cs ---
+using csharp_roguelike_rpg.Characters;
+namespace csharp_roguelike_rpg.Abilities;
+
+public abstract class Ability
+{
+    public string? Name { get; protected set; }
+    public string? Description { get; protected set; }
+    public int EnergyCost { get; protected set; }
+
+    public abstract void Use(Character caster, Character target);
+}
+--- Abilities/DoubleStrike.cs ---
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Systems;
+namespace csharp_roguelike_rpg.Abilities;
+
+public class DoubleStrike : Ability
+{
+    public DoubleStrike()
+    {
+        Name = "Double Strike";
+        Description = "You sly fox quick as a fox (redundant as hitting twice). Hit the target twice for 75% of your Dexterity as damage";
+        EnergyCost = 5;
+    }
+
+    public override void Use(Character caster, Character target)
+    {
+        // Each hit does 75% of the caster's Dexterity as damage
+        int damagePerHit = (int)(caster.Stats["Dexterity"] * 0.75);
+
+        // First Hit
+        target.Health -= damagePerHit;
+        UIManager.SlowPrint($"{caster.Name} strikes quickly, dealing {damagePerHit} damage!", ConsoleColor.Yellow);
+
+        // If target is still alive, hit a second time
+        if (target.Health > 0)
+        {
+            target.Health -= damagePerHit;
+            UIManager.SlowPrint($"{caster.Name} follows up with a second strike, dealing {damagePerHit} damage!", ConsoleColor.Yellow);
+        }
+    }
+}
+--- Abilities/Fireball.cs ---
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Systems;
+namespace csharp_roguelike_rpg.Abilities;
+
+public class Fireball : Ability
+{
+    public Fireball()
+    {
+        Name = "Fireball";
+        Description = "These are small rooms, what's the worst that could happen?. Hit the target with a huge fireball for 200% of Intellect as damage";
+        EnergyCost = 5;
+    }
+
+    public override void Use(Character caster, Character target)
+    {
+        // Fireball deals 200% of the caster's Intellect as damage
+        int damage = caster.Stats["Intellect"] * 2;
+        target.Health -= damage;
+        UIManager.SlowPrint($"{caster.Name} hurls a ball of fire at {target.Name}, dealing {damage} damage!", ConsoleColor.Red);
+    }
+}
+--- Abilities/PowerAttack.cs ---
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Systems;
+namespace csharp_roguelike_rpg.Abilities;
+
+public class PowerAttack : Ability
+{
+    public PowerAttack()
+    {
+        Name = "Power Attack";
+        Description = "Hurr Durr Warrior hit strong. Deals 150% of Strength as damage";
+        EnergyCost = 5;
+    }
+
+    public override void Use(Character caster, Character target)
+    {
+        // Power Attack deals 150% of the caster's Strength as damage
+        int damage = (int)(caster.Stats["Strength"] * 1.5);
+        target.Health -= damage;
+        UIManager.SlowPrint($"{caster.Name} uses {Name}, dealing {damage} damage to {target.Name}!");
+    }
+}
+--- Characters/Boss.cs ---
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.Characters;
+
+public class Boss : Monster
+{
+    public Boss(Item? bossLoot)
+        : base("Dragon", 100, 15, 8, 1000, 10, bossLoot)
+    {
+
+    }
+}
+--- Characters/Character.cs ---
+namespace csharp_roguelike_rpg.Characters;
+
+public abstract class Character
+{
+    public string Name { get; set; }
+    public int Health { get; set; }
+    public int MaxHealth { get; set; }
+    public Dictionary<string, int> Stats { get; private set; }
+    public bool IsDefending { get; set; }
+
+    public Character(string name, int health, int strength, int dexterity, int intellect)
+    {
+        Name = name;
+        MaxHealth = health;
+        Health = health;
+        Stats = new Dictionary<string, int>
+        {
+            {"Strength", strength},
+            {"Dexterity", dexterity},
+            {"Intellect", intellect}
+        };
+    }
+}
+--- Characters/Goblin.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+public class Goblin : Monster
+{
+    public Goblin(Item? loot)
+        : base("Goblin", 20, 8, 3, 50, 3, loot)
+    {
+
+    }
+}
+--- Characters/Monster.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+
+public class Monster : Character
+{
+    public Item? Loot { get; set; }
+    public int ExperienceValue { get; set; }
+
+    public Monster(string name, int health, int strength, int dexterity, int experience, int intellect, Item? loot = null)
+        : base(name, health, strength, dexterity, intellect)
+    {
+        ExperienceValue = experience;
+        Loot = loot;
+    }
+}
+--- Characters/Orc.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+public class Orc : Monster
+{
+    public Orc(Item? orcLoot)
+        : base("Orc", 40, 12, 2, 100, 2, orcLoot)
+    {
+
+    }
+}
+--- Characters/Player.cs ---
+using csharp_roguelike_rpg.Abilities;
+using csharp_roguelike_rpg.Items;
+using csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.World;
+namespace csharp_roguelike_rpg.Characters;
+
+public class Player : Character
+{
+    public PlayerClass Class { get; private set; }
+    public int Level { get; set; }
+    public int Experience { get; set; }
+    public int ExperienceToNextLevel { get; set; }
+    public Room? CurrentRoom { get; set; }
+    public List<Item> Inventory { get; private set; }
+    public Dictionary<EquipmentSlot, Item> Equipment { get; private set; }
+    public HashSet<Room> VisitedRooms { get; private set; }
+    public List<Ability> Abilities { get; private set; }
+
+    public Player(string name, PlayerClass playerClass)
+        : base(name, 0, 0, 0, 0)
+    {
+        Level = 1;
+        Experience = 0;
+        ExperienceToNextLevel = 100;
+        Inventory = new List<Item>();
+        Equipment = new Dictionary<EquipmentSlot, Item>();
+        VisitedRooms = new HashSet<Room>();
+        Abilities = new List<Ability>();
+
+        switch (playerClass)
+        {
+            case PlayerClass.Warrior:
+                MaxHealth = 80;
+                Stats["Strength"] = 12;
+                Stats["Dexterity"] = 4;
+                Stats["Intellect"] = 3;
+                Abilities.Add(new PowerAttack());
+                break;
+            case PlayerClass.Rogue:
+                MaxHealth = 60;
+                Stats["Strength"] = 8;
+                Stats["Dexterity"] = 10;
+                Stats["Intellect"] = 5;
+                Abilities.Add(new DoubleStrike());
+                break;
+            case PlayerClass.Mage:
+                MaxHealth = 50;
+                Stats["Strength"] = 5;
+                Stats["Dexterity"] = 6;
+                Stats["Intellect"] = 12;
+                Abilities.Add(new Fireball());
+                break;
+        }
+        Health = MaxHealth;
+        Class = playerClass;
+    }
+
+    public int GetTotalStrength()
+    {
+        int totalStrength = Stats["Strength"];
+
+        // Check for an equipped weapon
+        if (Equipment.TryGetValue(EquipmentSlot.MainHand, out Item? equippedItem))
+        {
+            if (equippedItem is Weapon equippedWeapon)
+            {
+                // Add weapon's damage
+                totalStrength += equippedWeapon.Damage;
+            }
+        }
+        return totalStrength;
+    }
+
+    public int GetTotalDefense()
+    {
+        int totalDefense = 0;
+
+        // Check for an equipped armor
+        if (Equipment.TryGetValue(EquipmentSlot.Chest, out Item? equippedItem))
+        {
+            if (equippedItem is Armor equippedArmor)
+            {
+                // Add Armor's defense
+                totalDefense += equippedArmor.Defense;
+            }
+        }
+        return totalDefense;
+    }
+
+    public void AddExperience(int experienceGained)
+    {
+        Experience += experienceGained;
+        UIManager.SlowPrint($"You gained {experienceGained} experience!");
+
+        while (Experience >= ExperienceToNextLevel)
+        {
+            // Level up!
+            Level++;
+            Experience -= ExperienceToNextLevel;
+            UIManager.SlowPrint($"\n*** You have reached Level {Level}! ***", ConsoleColor.DarkYellow);
+
+            // Increase stats, static for now but formulaic later
+            int healthIncrease = 0;
+            int strengthIncrease = 0;
+            int dexterityIncrease = 0;
+            int intellectIncrease = 0;
+
+            switch (Class)
+            {
+                case PlayerClass.Warrior:
+                    healthIncrease = 15;
+                    strengthIncrease = 3;
+                    dexterityIncrease = 1;
+                    intellectIncrease = 0;
+                    break;
+                case PlayerClass.Rogue:
+                    healthIncrease = 10;
+                    strengthIncrease = 1;
+                    dexterityIncrease = 3;
+                    intellectIncrease = 1;
+                    break;
+                case PlayerClass.Mage:
+                    healthIncrease = 8;
+                    strengthIncrease = 1;
+                    dexterityIncrease = 1;
+                    intellectIncrease = 3;
+                    break;
+            }
+
+            MaxHealth += healthIncrease;
+            Stats["Strength"] += strengthIncrease;
+            Stats["Dexterity"] += dexterityIncrease;
+            Stats["Intellect"] += intellectIncrease;
+            Health = MaxHealth;
+
+            UIManager.SlowPrint($"Max Health increased by {healthIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Strength increased by {strengthIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Dexterity increased by {dexterityIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Intellect increased by {intellectIncrease}.", ConsoleColor.DarkYellow);
+
+            // Calculate XP for next level
+            ExperienceToNextLevel = Level * 100;
+            UIManager.SlowPrint($"Experience to next level: {ExperienceToNextLevel}", ConsoleColor.DarkYellow);
+        }
+    }
+}
+--- DESIGN.md ---
+# Game Design Document: C# Fantasy Roguelike
+
+## 1. High-Concept Pitch
+
+* A classic style turn-based fantasy roguelike RPG that focuses on tactical combat and a robust crafting system for character progression and endless replayability.
+
+## 2. Core Gameplay Loop
+
+* **Explore** the dungeon.
+* **Encounter** monsters.
+* **Fight** in turn-based combat.
+* **Collect** loot and crafting materials.
+* **Craft** new gear at safe locations.
+* **Explore Deeper** into more dangerous levels.
+* **Inevitably Die** and learn from the run.
+* **Return** to the main menu to start a new, fresh run.
+
+## 3. Key Features
+
+* [x] **Turn-Based Combat System**
+  * [x] Stat-based damage (Strength, Defense).
+  * [x] Dexterity-based miss chance.
+  * [x] Color-coded feedback.
+* [x] **Character Stats & Leveling**
+  * [x] Experience gain from combat.
+  * [x] Stat increases on level-up.
+  * [x] `stats` command to view character sheet.
+* [x] **Player Inventory & Equipment Slots**
+  * [x] `inventory` and `examine` commands.
+  * [x] `equip` and `unequip` logic.
+  * [x] Dictionary-based equipment slots.
+* [x] **Item & Crafting System**
+  * [x] Inheritance for item types (`Weapon`, `Armor`, `Potion`).
+  * [x] `use` command for consumables.
+  * [x] Recipe-based crafting in designated safe areas.
+
+* [X] **Advanced Procedural Generation**
+  * [X] Create branching, interconnected dungeons (Improved Drunkard's Walk).
+  * [X] Add special room types (e.g., a guaranteed safe Start Room, a Boss Room).
+* [ ] **Core Roguelike Loop**
+  * [X] A `Game` class to manage the entire session.
+  * [X] Game Over screen on player death.
+  * [X] A "Play Again?" option that generates a new player and a new dungeon.
+  * [ ] Difficulty scaling (Dungeon Floors).
+* [X] **Enhanced User Experience**
+  * [X] Player Map system to show discovered rooms.
+  * [X] Atmospheric pacing with delayed text printing.
+
+## 4. Core Data Models (Class Blueprint)
+
+* **`Game`:** (A new class to manage the entire game session, including the main loop, player state, and dungeon instance.)
+* **`Character`:** (Base class for players and monsters.)
+* **`Player`:** (Inherits from `Character`.)
+* **`Monster`:** (Inherits from `Character`.)
+  * **`Goblin`:** (Inherits from `Monster`.)
+  * **`Orc`:** (Inherits from `Monster`.)
+* **`Item`:** (Base class for all items.)
+  * **`Weapon`:** (Inherits from `Item`.)
+  * **`Armor`:** (Inherits from `Item`.)
+  * **`Potion`:** (Inherits from `Item`.)
+* **`CraftingRecipe`:** (Contains required materials and resulting item.)
+* **`Room`:** (A single location in the dungeon grid.)
+* **`DungeonGenerator`:** (Responsible for creating the `Room` layout.)
+
+## 5. Minimum Viable Product (MVP)
+
+* [x] Player can fight monsters, collect loot, and craft in a post-combat safe area. *(Status: Completed)*
+
+--- GameData.cs ---
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Items;
+using csharp_roguelike_rpg.Systems;
+
+public class GameData
+{
+    public List<Item> MasterLootTable { get; private set; }
+    public List<Monster> MasterMonsterTable { get; private set; }
+    public List<Monster> MasterBossTable { get; private set; }
+    public List<CraftingRecipe> AvailableRecipes { get; private set; }
+    public Dictionary<PlayerClass, Dictionary<int, List<Modifier>>> ClassTalents { get; private set; }
+
+    public GameData()
+    {
+        // --- INITIALIZE TABLES ---
+        MasterLootTable = new List<Item>();
+        MasterMonsterTable = new List<Monster>();
+        MasterBossTable = new List<Monster>();
+        AvailableRecipes = new List<CraftingRecipe>();
+        ClassTalents = new Dictionary<PlayerClass, Dictionary<int, List<Modifier>>>();
+
+        // --- CRAFTED ITEMS AND MATERIALS ---
+
+        // Materials
+        Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
+
+        // Crafted Items
+        Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
+
+
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+        // --- TABLE CONTENTS ---
+        //----------------------------------------------------------------------------------------------------------------------------------------------        
+
+        // --- MASTER LOOT TABLE ---
+        MasterLootTable.Add(new Armor("Rusty Armor", "Well, better than nothing!", 2));
+        MasterLootTable.Add(new Weapon("Rusty Sword", "An old sword, as sharp as rolling pin!. At least it could give Tetanus", 2));
+        MasterLootTable.Add(new Potion("Small Potion", "Wouldn't hurt to drink this, wouldn't help either (Restores 20 health, impressive...)", 20));
+        MasterLootTable.Add(goblinHide);
+
+
+        // --- MASTER MONSTER TABLE ---
+        MasterMonsterTable.Add(new Goblin(goblinHide));
+        MasterMonsterTable.Add(new Orc(null));
+
+
+        // --- MASTER BOSS TABLE ---
+        MasterBossTable.Add(new Boss(null));
+
+        // --- CRAFTING TABLE ---
+        CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>
+        {
+            { goblinHide, 2 }
+        });
+        AvailableRecipes.Add(armorRecipe);
+
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+        // --- TALENTS ---
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+
+        // --- WARRIOR TALENTS ---
+        ClassTalents[PlayerClass.Warrior] = new Dictionary<int, List<Modifier>>
+        {
+            // Level 3 Talents
+            [3] = new List<Modifier>
+        {
+            new StatModifier("Thick Hide", "Who needs brains when you have brawn? and you have neither. Permanently increases Max Health by 15.", Rarity.Uncommon, "MaxHealth", 15),
+            new StatModifier("Weapon Master", "You smash things harder now, woop!. Permanently increases Strength by 2.", Rarity.Uncommon, "Strength", 2),
+            new StatModifier("Adrenaline Rush", "You feel less pain now, big deal. Permanently increases Dexterity by 1.", Rarity.Common, "Dexterity", 1)
+        }
+            // TODO: Add extra tiers
+        };
+
+        // --- ROGUE TALENTS ---
+        ClassTalents[PlayerClass.Rogue] = new Dictionary<int, List<Modifier>>
+        {
+            // Level 3 Talents
+            [3] = new List<Modifier>
+        {
+            new StatModifier("Fleet Footed", "I AM SPEED!. Permanently increases Dexterity by 2.", Rarity.Uncommon, "Dexterity", 2),
+            new StatModifier("Precise Strikes", "Your stab got stabbier!. Permanently increases Strength by 1.", Rarity.Common, "Strength", 1),
+            new StatModifier("Toughness", "You are not as feeble as you think. Permanently increases Max Health by 10.", Rarity.Common, "MaxHealth", 10)
+        }
+        };
+
+        // --- MAGE TALENTS ---
+        ClassTalents[PlayerClass.Mage] = new Dictionary<int, List<Modifier>>
+        {
+            // Level 3 Talents for Mage
+            [3] = new List<Modifier>
+        {
+            new StatModifier("Arcane Intellect", "You are smarter than a fifth grader!. Permanently increases Intellect by 3.", Rarity.Uncommon, "Intellect", 3),
+            new StatModifier("Glass Cannon", "Do I really need to explain this?. +2 Intellect, -5 Max Health.", Rarity.Epic, "Intellect", 2), // TODO: update StatModifier to handle negative values on other stats
+            new StatModifier("Stamina", "Basic white mage buff. Permanently increases Max Health by 12.", Rarity.Common, "MaxHealth", 12)
+        }
+        };
+    }
+}
+--- Items/Armor.cs ---
+namespace csharp_roguelike_rpg.Items;
+public class Armor : Item
+{
+    public int Defense { get; set; }
+
+    public Armor(string name, string description, int defense) : base(name, description)
+    {
+        Defense = defense;
+    }
+}
+--- Items/CraftingRecipe.cs ---
+namespace csharp_roguelike_rpg.Items;
+public class CraftingRecipe
+{
+    // Key is the item, the value is the required quantity
+    public Dictionary<Item, int> RequiredMaterials { get; private set; }
+    public Item ResultingItem { get; private set; }
+
+    public CraftingRecipe(Item result, Dictionary<Item, int> materials)
+    {
+        ResultingItem = result;
+        RequiredMaterials = materials;
+    }
+}
+--- Items/Item.cs ---
+namespace csharp_roguelike_rpg.Items;
+public class Item
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    public Item(string name, string description)
+    {
+        Name = name;
+        Description = description;
+    }
+}
+--- Items/Potion.cs ---
+namespace csharp_roguelike_rpg.Items;
+public class Potion : Item
+{
+    public int HealthToRestore { get; set; }
+
+    public Potion(string name, string description, int healthToRestore) : base(name, description)
+    {
+        HealthToRestore = healthToRestore;
+    }
+}
+--- Items/Relic.cs ---
+using csharp_roguelike_rpg.Systems;
+namespace csharp_roguelike_rpg.Items;
+
+public class Relic : Item
+{
+    public Modifier Effect { get; private set; }
+
+    public Relic(string name, string description, Modifier effect) : base(name, description)
+    {
+        Effect = effect;
+    }
+}
+--- Items/Weapon.cs ---
+namespace csharp_roguelike_rpg.Items;
+public class Weapon : Item
+{
+    public int Damage { get; set; }
+
+    public Weapon(string name, string description, int damage) : base(name, description)
+    {
+        Damage = damage;
+    }
+}
+--- Program.cs ---
+﻿
+using csharp_roguelike_rpg.Systems;
+
+Game game = new Game();
+game.Run();
+--- README.md ---
+# C# Procedural Roguelike RPG
+
+A classic, turn-based fantasy roguelike built from the ground up in C#. This project focuses on demonstrating core game systems design, object-oriented principles, and procedural content generation, all within a polished console application.
+
+## Key Features
+
+* **Infinite Dungeons:** Explore a new, unique dungeon on every playthrough, procedurally generated using a "Drunkard's Walk" algorithm.
+* **Tactical Turn-Based Combat:** Engage in classic RPG combat with mechanics for attacking, missing, and damage reduction based on stats and gear.
+* **Character Progression:** Gain experience from defeating monsters to level up, increasing your stats and becoming more powerful.
+* **Equipment System:** Find, equip, and manage `Weapons` and `Armor` in distinct equipment slots. Gear directly impacts combat performance.
+* **Consumables & Crafting:** Use `Potions` to heal and gather materials from monsters to `craft` new items.
+
+## Technical Deep Dive
+
+This project was built to showcase a strong understanding of C# and core software engineering principles.
+
+* **Architecture (OOP):** The project is built on a strong object-oriented foundation. A multi-layer inheritance hierarchy (`Character` -> `Monster` -> `Goblin`/`Orc`) is used to model game entities, promoting code reuse and scalability. Game logic is encapsulated into distinct classes (`DungeonGenerator`) and helper methods (`StartCombat`, `MovePlayer`) to follow the Single Responsibility Principle.
+
+* **Procedural Generation:** The world is generated using a "Drunkard's Walk" algorithm. A `Dictionary<string, Room>` serves as a flexible and efficient sparse grid to store the map data, allowing for complex and non-rectangular dungeon layouts.
+
+* **Game Systems Design:**
+  * **Combat:** The turn-based combat system uses character stats (`Strength`, `Dexterity`) and equipped item properties (`Damage`, `Defense`) to calculate outcomes, including a miss chance based on a simulated "to-hit" roll.
+  * **Items & Inheritance:** The item system uses inheritance (`Item` -> `Weapon`/`Armor`/`Potion`) and C#'s `is` keyword for type-checking, allowing for different item types with unique properties and behaviors (`equip` vs. `use`).
+  * **State Management:** The main game loop is a state machine that cleanly transitions between exploration, combat, and crafting phases.
+
+## How to Run
+
+1. Clone the repository.
+2. Navigate to the project directory.
+3. Run the application with `dotnet run`.
+
+--- Systems/AbilityGrantModifier.cs ---
+namespace csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.Abilities;
+using csharp_roguelike_rpg.Characters;
+
+public class AbilityGrantModifier : Modifier
+{
+    private readonly Ability _abilityToGrant;
+
+    public AbilityGrantModifier(string name, string description, Rarity rarity, Ability abilityToGrant)
+    {
+        Name = name;
+        Description = description;
+        Rarity = rarity;
+        _abilityToGrant = abilityToGrant;
+    }
+
+    public override void Apply(Player player)
+    {
+        player.Abilities.Add(_abilityToGrant);
+        UIManager.SlowPrint($"You have learned a new ability: {_abilityToGrant.Name}!", ConsoleColor.Magenta);
+         UIManager.SlowPrint($"{_abilityToGrant.Description}", ConsoleColor.Magenta);
+    }
+}
+--- Systems/EquipmentSlot.cs ---
+namespace csharp_roguelike_rpg.Systems;
+public enum EquipmentSlot
+{
+    MainHand,
+    Chest
+}
+--- Systems/Game.cs ---
+namespace csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.Abilities;
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Items;
+using csharp_roguelike_rpg.World;
+
+public class Game
+{
+    // --- FIELDS ---
+    private Player _player = null!;
+    private DungeonGenerator _generator;
+    private GameData _gameData;
+
+    public Game()
+    {
+        _gameData = new GameData();
+        _generator = new DungeonGenerator(_gameData);
+    }
+
+    private void SetupNewGame()
+    {
+        Console.Clear();
+        UIManager.SlowPrint("WELCOME TO YOUR DOOM!");
+
+        string? playerName;
+        do
+        {
+            UIManager.SlowPrint("What is your name, fool?");
+            Console.Write("> ");
+            playerName = Console.ReadLine();
+        } while (string.IsNullOrWhiteSpace(playerName));
+
+        UIManager.SlowPrint("Choose your weakling:");
+        UIManager.SlowPrint("1. Warrior (High Health, High Strength)");
+        UIManager.SlowPrint("2. Rogue   (High Dexterity, Balanced)");
+        UIManager.SlowPrint("3. Mage    (Low Health, High Potential)");
+
+        PlayerClass chosenClass;
+        while (true)
+        {
+            Console.Write("> ");
+            string? input = Console.ReadLine();
+            if (input == "1" || input?.ToLower() == "warrior")
+            {
+                chosenClass = PlayerClass.Warrior;
+                break;
+            }
+            if (input == "2" || input?.ToLower() == "rogue")
+            {
+                chosenClass = PlayerClass.Rogue;
+                break;
+            }
+            if (input == "3" || input?.ToLower() == "mage")
+            {
+                chosenClass = PlayerClass.Mage;
+                break;
+            }
+            Console.WriteLine("Invalid choice. Please enter 1, 2, or 3.");
+        }
+        UIManager.SlowPrint($"So, you will be playing the {chosenClass}? Good luck, you'll need it...");
+
+        // --- WORLD AND PLAYER CREATION ---
+        Room startingRoom = _generator.Generate(10);
+        _player = new Player(playerName, chosenClass);
+        _player.CurrentRoom = startingRoom;
+        _player.VisitedRooms.Add(startingRoom);
+    }
+
+
+    private void GameLoop()
+    {
+        while (true)
+        {
+            Console.Write("\n> ");
+            string? choice = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(choice))
+            {
+                UIManager.SlowPrint("Please enter a command.");
+                continue;
+            }
+
+            // Split the input into words to get the command verb
+            string[] words = choice.ToLower().Split(' ');
+            string verb = words[0];
+
+            // The new command parser
+            switch (verb)
+            {
+                case "north":
+                case "south":
+                case "east":
+                case "west":
+                    if (_player.CurrentRoom != null)
+                    {
+                        switch (verb)
+                        {
+                            case "north":
+                                MovePlayer(_player.CurrentRoom.North);
+                                break;
+                            case "south":
+                                MovePlayer(_player.CurrentRoom.South);
+                                break;
+                            case "east":
+                                MovePlayer(_player.CurrentRoom.East);
+                                break;
+                            case "west":
+                                MovePlayer(_player.CurrentRoom.West);
+                                break;
+                        }
+                    }
+                    break;
+
+                case "look":
+                case "l":
+                    DescribeRoom();
+                    break;
+
+                case "stats":
+                case "char":
+                    Console.WriteLine("\n--- Character Stats ---");
+                    Console.WriteLine($" Name: {_player.Name}");
+                    Console.WriteLine($" Class: {_player.Class}");
+                    Console.WriteLine($" Level: {_player.Level}");
+                    Console.WriteLine($" Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
+                    Console.WriteLine($" Health: {_player.Health} / {_player.MaxHealth}");
+                    Console.WriteLine("-----------------------");
+                    Console.WriteLine(" Attributes:");
+                    foreach (var stat in _player.Stats)
+                    {
+                        Console.WriteLine($" - {stat.Key}: {stat.Value}");
+                    }
+                    Console.WriteLine("-----------------------");
+                    break;
+
+                case "map":
+                case "m":
+                    DrawMap();
+                    break;
+
+                case "inventory":
+                case "i":
+                    // display player inventory
+                    if (_player.Inventory.Any())
+                    {
+                        Console.WriteLine("\nInventory");
+                        foreach (var item in _player.Inventory)
+                        {
+                            Console.WriteLine($"- {item.Name}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nYour inventory is empty");
+                    }
+                    break;
+
+                case "examine":
+                case "x":
+                    if (words.Length > 1)
+                    {
+                        string itemToExamineName = string.Join(" ", words.Skip(1));
+                        Item? itemToExamine = _player.Inventory.Find(item => item.Name.Equals(itemToExamineName, StringComparison.OrdinalIgnoreCase));
+
+                        if (itemToExamine != null)
+                        {
+                            Console.WriteLine($"\n{itemToExamine.Name}");
+                            UIManager.SlowPrint($"  {itemToExamine.Description}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"You don't have a '{itemToExamineName}' in your inventory.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("What do you want to examine?");
+                    }
+                    break;
+
+                case "take":
+                    if (_player.CurrentRoom == null)
+                    {
+                        Console.WriteLine("Did you write anything?");
+                        break;
+                    }
+                    if (words.Length > 1)
+                    {
+                        string itemToTakeName = string.Join(" ", words.Skip(1));
+                        Item? itemToTake = _player.CurrentRoom.ItemsInRoom.Find(item => item.Name.Equals(itemToTakeName, StringComparison.OrdinalIgnoreCase));
+
+                        if (itemToTake != null)
+                        {
+                            _player.Inventory.Add(itemToTake);
+                            Console.WriteLine($"You took the {itemToTake.Name}");
+                            _player.CurrentRoom.ItemsInRoom.Remove(itemToTake);
+                        }
+                    }
+                    break;
+
+                case "drop":
+                    if (_player.CurrentRoom == null)
+                    {
+                        Console.WriteLine("STOP TRYING TO BREAK MY GAME! =(");
+                        break;
+                    }
+                    if (words.Length > 1)
+                    {
+                        string itemToDropName = string.Join(" ", words.Skip(1));
+                        Item? itemToDrop = _player.Inventory.Find(item => item.Name.Equals(itemToDropName, StringComparison.OrdinalIgnoreCase));
+
+                        if (itemToDrop != null)
+                        {
+                            _player.Inventory.Remove(itemToDrop);
+                            Console.WriteLine($"You dropped the {itemToDrop.Name}");
+                            _player.CurrentRoom.ItemsInRoom.Add(itemToDrop);
+                        }
+                    }
+                    break;
+
+                case "equip":
+                    if (words.Length > 1)
+                    {
+                        string itemToEquipName = string.Join(" ", words.Skip(1));
+
+                        Item? itemToEquip = _player.Inventory.Find(item => item.Name.Equals(itemToEquipName, StringComparison.OrdinalIgnoreCase));
+
+                        // Find if the item is in the Inventory
+                        if (itemToEquip == null)
+                        {
+                            Console.WriteLine("You don't have that item in your inventory.");
+                            break;
+                        }
+                        // If item is a Weapon
+                        if (itemToEquip is Weapon weapon)
+                        {
+                            // Unequip any equipped item in the slot
+                            if (_player.Equipment.ContainsKey(EquipmentSlot.MainHand))
+                            {
+                                _player.Inventory.Add(_player.Equipment[EquipmentSlot.MainHand]);
+                                Console.WriteLine($"You unequip {_player.Equipment[EquipmentSlot.MainHand].Name}.");
+                            }
+
+                            // Equip the new weapon
+                            _player.Equipment[EquipmentSlot.MainHand] = weapon;
+                            _player.Inventory.Remove(weapon); // This line removes it from the inventory
+                            Console.WriteLine($"You equip the {weapon.Name}.");
+                        }
+                        // If item is Armor
+                        else if (itemToEquip is Armor armor)
+                        {
+                            // Unequip any equipped item in the slot
+                            if (_player.Equipment.ContainsKey(EquipmentSlot.Chest))
+                            {
+                                _player.Inventory.Add(_player.Equipment[EquipmentSlot.Chest]);
+                                Console.WriteLine($"You unequip {_player.Equipment[EquipmentSlot.Chest].Name}.");
+                            }
+
+                            // Equip the new armor
+                            _player.Equipment[EquipmentSlot.Chest] = armor;
+                            _player.Inventory.Remove(armor); // This line removes it from the inventory
+                            Console.WriteLine($"You equip the {armor.Name}.");
+                        }
+                        else
+                        {
+                            // The item is not equippable.
+                            Console.WriteLine("You can't equip that type of item.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("What do you want to equip?");
+                    }
+                    break;
+                case "use":
+                    if (words.Length > 1)
+                    {
+                        string itemToUseName = string.Join(" ", words.Skip(1));
+
+                        Item? itemToUse = _player.Inventory.Find(item => item.Name.Equals(itemToUseName, StringComparison.OrdinalIgnoreCase));
+
+                        if (itemToUse == null)
+                        {
+                            Console.WriteLine("You don't have that item in your inventory.");
+                            break;
+                        }
+                        if (itemToUse is Potion potion)
+                        {
+                            _player.Health += potion.HealthToRestore;
+                            if (_player.Health > _player.MaxHealth)
+                            {
+                                _player.Health = _player.MaxHealth; // Cap health at max health
+                            }
+                            _player.Inventory.Remove(potion);
+                            UIManager.SlowPrint($"You use the {potion.Name} and restore {potion.HealthToRestore} health. You now have {_player.Health}/{_player.MaxHealth} HP", ConsoleColor.Green);
+                        }
+                        else
+                        {
+                            Console.WriteLine("You can't use that item.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("What do you want to use?");
+                    }
+                    break;
+                case "craft":
+                    // First, check if the room is safe (no monsters).
+                    if (_player.CurrentRoom != null && _player.CurrentRoom.MonstersInRoom.Any())
+                    {
+                        UIManager.SlowPrint("It's too dangerous to craft here!", ConsoleColor.Red);
+                        break;
+                    }
+
+                    // --- Enter the Crafting Sub-Menu ---
+                    UIManager.SlowPrint("You approach a quiet corner and lay out your materials...", ConsoleColor.DarkGray);
+                    while (true)
+                    {
+                        Console.WriteLine("\n--- Crafting Menu ---");
+                        if (_gameData.AvailableRecipes.Any())
+                        {
+                            Console.WriteLine("Available recipes:");
+                            foreach (var recipe in _gameData.AvailableRecipes)
+                            {
+                                Console.WriteLine($"- craft {recipe.ResultingItem.Name.ToLower()}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("You don't know any recipes.");
+                        }
+                        Console.WriteLine("- i (view inventory)");
+                        Console.WriteLine("- leave");
+                        Console.Write("> ");
+                        string? craftingChoice = Console.ReadLine();
+
+                        if (string.IsNullOrEmpty(craftingChoice)) continue;
+
+                        if (craftingChoice.Equals("leave", StringComparison.OrdinalIgnoreCase))
+                        {
+                            UIManager.SlowPrint("You pack up your materials.");
+                            break; // Exit the crafting loop
+                        }
+                        else if (craftingChoice.Equals("i", StringComparison.OrdinalIgnoreCase) || craftingChoice.Equals("inventory", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (_player.Inventory.Any())
+                            {
+                                Console.WriteLine("\nInventory");
+                                foreach (var item in _player.Inventory)
+                                {
+                                    Console.WriteLine($"- {item.Name}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("\nYour inventory is empty");
+                            }
+                        }
+                        else if (craftingChoice.StartsWith("craft ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string itemToCraftName = craftingChoice.Substring(6);
+
+                            CraftingRecipe? recipe = _gameData.AvailableRecipes.Find(r => r.ResultingItem.Name.Equals(itemToCraftName, StringComparison.OrdinalIgnoreCase));
+
+                            if (recipe == null)
+                            {
+                                Console.WriteLine("You don't know how to craft that.");
+                                continue;
+                            }
+
+                            bool canCraft = true;
+                            foreach (var material in recipe.RequiredMaterials)
+                            {
+                                int materialCount = _player.Inventory.Count(item => item.Name == material.Key.Name);
+                                if (materialCount < material.Value)
+                                {
+                                    Console.WriteLine($"You don't have enough {material.Key.Name}. Required: {material.Value}, Have: {materialCount}");
+                                    canCraft = false;
+                                    break;
+                                }
+                            }
+
+                            if (canCraft)
+                            {
+                                foreach (var material in recipe.RequiredMaterials)
+                                {
+                                    for (int i = 0; i < material.Value; i++)
+                                    {
+                                        Item itemToRemove = _player.Inventory.First(item => item.Name == material.Key.Name);
+                                        _player.Inventory.Remove(itemToRemove);
+                                    }
+                                }
+                                _player.Inventory.Add(recipe.ResultingItem);
+                                UIManager.SlowPrint($"Successfully crafted {recipe.ResultingItem.Name}!", ConsoleColor.Green);
+                            }
+                        }
+                    }
+                    break;
+                case "quit":
+                    UIManager.SlowPrint("You decide to rest for now. Until next time!");
+                    return; // Use 'return' to exit the application from the main context.
+
+                default:
+                    Console.WriteLine("I don't understand that command.");
+                    break;
+            }
+        }
+    }
+    public void Run()
+    {
+        while (true)
+        {
+            SetupNewGame();
+            DescribeRoom();
+            GameLoop();
+
+            UIManager.SlowPrint("\nPlay Again? (y/n)");
+            string? playAgain = Console.ReadLine();
+
+            if (playAgain?.ToLower() != "y")
+            {
+                break;
+            }
+        }
+        UIManager.SlowPrint("Thanks for playing!");
+    }
+
+    //----------------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------------
+
+    // --- HELPER METHODS ---
+
+    private bool StartCombat(Monster monsterToFight)
+    {
+        Random random = new Random();
+
+        UIManager.SlowPrint($"{_player.Name} encounters a fierce {monsterToFight.Name}");
+
+        UIManager.SlowPrint("Rolling for initiave... feeling lucky?");
+        var combatants = new List<Character> { _player, monsterToFight };
+        var turnOrder = combatants.OrderByDescending(c => c.Stats["Dexterity"] + random.Next(1, 21)).ToList();
+        UIManager.SlowPrint("Turn order is set!");
+        foreach (var character in turnOrder)
+        {
+            UIManager.SlowPrint($"- {character.Name}", ConsoleColor.DarkGray);
+        }
+
+
+
+        // Turn-Based combat
+        int round = 1;
+        while (_player.Health > 0 && monsterToFight.Health > 0)
+        {
+            // Display Status
+            Console.WriteLine("\n--------------------");
+            Console.WriteLine($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
+            Console.WriteLine($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
+            Console.WriteLine("\n--------------------");
+
+            Console.WriteLine($"\n--- ROUND {round} ---");
+
+            foreach (var character in turnOrder)
+            {
+                character.IsDefending = false;
+
+                if (character.Health <= 0) continue;
+                if (_player.Health <= 0 || monsterToFight.Health <= 0) break;
+
+                if (character is Player)
+                {
+                    UIManager.SlowPrint("Your turn! Choose an action");
+                    Console.WriteLine("- attack");
+                    Console.WriteLine("- defend");
+                    foreach (var ability in _player.Abilities)
+                    {
+                        Console.WriteLine($"- {ability.Name?.ToLower()}");
+                    }
+                    Console.Write("> ");
+                    string? playerChoice = Console.ReadLine();
+
+                    // Safety check to prevent passing null values
+                    if (string.IsNullOrEmpty(playerChoice))
+                    {
+                        Console.WriteLine("You must enter a command!");
+                        continue; // Skip the rest of the turn
+                    }
+
+                    // Process Player's Action
+                    if (playerChoice.Equals("attack", StringComparison.OrdinalIgnoreCase))
+                    {
+                        int attackRoll = random.Next(1, 21) + _player.Stats["Dexterity"];
+                        int evasionClass = 10 + monsterToFight.Stats["Dexterity"];
+
+                        if (attackRoll >= evasionClass)
+                        {
+                            // Calculate damage based on player strength and weapon
+                            int damageDealt = _player.GetTotalStrength();
+                            monsterToFight.Health -= damageDealt;
+                            UIManager.SlowPrint($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
+                        }
+                        else
+                        {
+                            UIManager.SlowPrint("You swing and miss!", ConsoleColor.Gray);
+                        }
+                    }
+                    else if (playerChoice.Equals("defend", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _player.IsDefending = true;
+                        UIManager.SlowPrint($"{_player.Name} takes a defensive stance!", ConsoleColor.White);
+                    }
+                    else
+                    {
+                        Ability? chosenAbility = _player.Abilities.Find(a => a.Name?.Equals(playerChoice, StringComparison.OrdinalIgnoreCase) ?? false);
+                        if (chosenAbility != null)
+                        {
+                            chosenAbility.Use(_player, monsterToFight);
+                        }
+                        else
+                        {
+                            UIManager.SlowPrint("Invalid command! You hesitate and lose your turn.");
+                        }
+                    }
+                }
+                else if (character is Monster actingMonster)
+                {
+                    // --- NEW TO-HIT LOGIC FOR MONSTER ---
+                    int attackRoll = random.Next(1, 21) + actingMonster.Stats["Dexterity"];
+                    int evasionClass = 10 + _player.Stats["Dexterity"];
+
+                    if (attackRoll >= evasionClass)
+                    {
+                        // It's a hit!
+                        int monsterDamage = actingMonster.Stats["Strength"];
+                        int playerDefense = _player.GetTotalDefense();
+                        int damageToPlayer = monsterDamage - playerDefense;
+
+                        if (_player.IsDefending)
+                        {
+                            damageToPlayer /= 2;
+                            UIManager.SlowPrint($"{_player.Name} braces for the hit!", ConsoleColor.White);
+                        }
+
+                        if (damageToPlayer < 1)
+                        {
+                            damageToPlayer = 1;
+                        }
+
+                        _player.Health -= damageToPlayer;
+                        UIManager.SlowPrint($"The {actingMonster.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                    }
+                    else
+                    {
+                        // It's a miss.
+                        UIManager.SlowPrint($"The {actingMonster.Name} attacks and misses!", ConsoleColor.Gray);
+                    }
+                }
+                round++;
+            }
+        }
+
+        Console.WriteLine("\n--- BATTLE OVER ---");
+
+        // Check for winners
+        if (_player.Health > 0)
+        {
+            UIManager.SlowPrint($"You defeated the {monsterToFight.Name}!");
+            if (monsterToFight.Loot != null)
+            {
+                UIManager.SlowPrint($"You found a {monsterToFight.Loot.Name}!");
+                _player.Inventory.Add(monsterToFight.Loot);
+            }
+            _player.AddExperience(monsterToFight.ExperienceValue);
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private void DescribeRoom()
+    {
+        if (_player.CurrentRoom == null)
+        {
+            Console.WriteLine("You are lost in a void...");
+            return;
+        }
+
+        UIManager.SlowPrint($"\nLocation: {_player.CurrentRoom.Name} ({_player.CurrentRoom.X}, {_player.CurrentRoom.Y})");
+        UIManager.SlowPrint(_player.CurrentRoom.Description);
+
+        // --- MONSTER OR ITEM LIST ---
+        if (_player.CurrentRoom.MonstersInRoom.Any())
+        {
+            UIManager.SlowPrint("\nDangerous creatures lurk here:");
+            foreach (Monster monster in _player.CurrentRoom.MonstersInRoom)
+            {
+                UIManager.SlowPrint($"- A fearsome {monster.Name}", ConsoleColor.Red);
+            }
+        }
+        else
+        {
+            if (_player.CurrentRoom.ItemsInRoom.Any())
+            {
+                UIManager.SlowPrint("\nYou found treasure in this room:");
+                foreach (Item item in _player.CurrentRoom.ItemsInRoom)
+                {
+                    UIManager.SlowPrint($"- {item.Name}", ConsoleColor.Green);
+                }
+            }
+        }
+    }
+
+    private void MovePlayer(Room? newRoom)
+    {
+        if (newRoom != null)
+        {
+            // Move Player
+            _player.CurrentRoom = newRoom;
+            _player.VisitedRooms.Add(newRoom);
+            DescribeRoom();
+
+            // Trigger combat if it is a monster room
+            while (_player.CurrentRoom.MonstersInRoom.Count > 0 && _player.Health > 0)
+            {
+                Monster monster = _player.CurrentRoom.MonstersInRoom[0];
+                bool playerWon = StartCombat(monster);
+                if (playerWon)
+                {
+                    _player.CurrentRoom.MonstersInRoom.Remove(monster);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine("You can't go that way.");
+        }
+    }
+
+    private void DrawMap()
+    {
+        // null guard
+        if (_player.CurrentRoom == null)
+        {
+            Console.WriteLine("Player is not in the room, how did you do that?");
+            return; // Exit the method early
+        }
+
+        // Find the boundaries of the discovered map.
+        int minX = _player.VisitedRooms.Min(r => r.X);
+        int maxX = _player.VisitedRooms.Max(r => r.X);
+        int minY = _player.VisitedRooms.Min(r => r.Y);
+        int maxY = _player.VisitedRooms.Max(r => r.Y);
+
+        Console.WriteLine("\n--- Dungeon Map ---");
+
+        // Loop through the grid from top to bottom.
+        for (int y = maxY; y >= minY; y--)
+        {
+            // A string for each row of the map.
+            string line = "";
+            for (int x = minX; x <= maxX; x++)
+            {
+                // Check if the player is at the current coordinate.
+                if (_player.CurrentRoom.X == x && _player.CurrentRoom.Y == y)
+                {
+                    line += "[P]"; // Player's position
+                }
+                // Check if a visited room exists at the current coordinate.
+                else if (_player.VisitedRooms.Any(r => r.X == x && r.Y == y))
+                {
+                    line += "[#]"; // Visited room
+                }
+                else
+                {
+                    line += "   "; // Empty, undiscovered space
+                }
+            }
+            Console.WriteLine(line);
+        }
+        Console.WriteLine("-------------------");
+    }
+}
+--- Systems/Modifier.cs ---
+namespace csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.Characters;
+
+public abstract class Modifier
+{
+    public string? Name { get; protected set; }
+    public string? Description { get; protected set; }
+    public Rarity Rarity { get; protected set; }
+
+    public abstract void Apply(Player player);
+}
+--- Systems/PlayerClass.cs ---
+namespace csharp_roguelike_rpg.Systems;
+public enum PlayerClass
+{
+    Warrior,
+    Rogue,
+    Mage,
+}
+--- Systems/Rarity.cs ---
+namespace csharp_roguelike_rpg.Systems;
+public enum Rarity
+{
+    Common,     // Gray
+    Uncommon,   // Green
+    Heroic,     // Blue
+    Epic,       // Purple
+    Legendary,  // Orange
+    Unique      // Red
+}
+--- Systems/StatModifier.cs ---
+namespace csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.Characters;
+
+public class StatModifier : Modifier
+{
+    private readonly string _statToModify;
+    private readonly int _amount;
+
+    public StatModifier(string name, string description, Rarity rarity, string statToModify, int amount)
+    {
+        Name = name;
+        Description = description;
+        Rarity = rarity;
+        _statToModify = statToModify;
+        _amount = amount;
+    }
+
+    public override void Apply(Player player)
+    {
+        if (player.Stats.ContainsKey(_statToModify))
+        {
+            player.Stats[_statToModify] += _amount;
+            UIManager.SlowPrint($"Your {_statToModify} has permanently increased by {_amount}!", ConsoleColor.Green);
+        }   
+    }
+}
+--- Systems/UIManager.cs ---
+namespace csharp_roguelike_rpg.Systems;
+public static class UIManager
+{
+    public static void SlowPrint(string text, ConsoleColor? color = null)
+    {
+        if (color.HasValue)
+        {
+            Console.ForegroundColor = color.Value;
+        }
+
+        foreach (char c in text)
+        {
+            Console.Write(c);
+            Thread.Sleep(25);
+        }
+
+        Console.ResetColor();
+        Console.WriteLine();
+    }
+}
+--- World/DungeonGenerator.cs ---
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.World;
+
+public class DungeonGenerator
+{
+    private Random _random = new Random();
+    private GameData _gameData;
+
+    public DungeonGenerator(GameData gameData)
+    {
+        _gameData = gameData;
+    }
+
+    public Room Generate(int numberOfRooms)
+    {
+        // --- INITIALIZATION ---
+        var map = new Dictionary<string, Room>();
+        Room currentRoom = new Room(0, 0);
+        map.Add("0,0", currentRoom);
+        Room startRoom = currentRoom;
+
+        // --- MAIN LOOP ---
+        for (int i = 0; i < numberOfRooms - 1; i++)
+        {
+            // Choose a random direction (0=North, 1=East, 2=South, 3=West)
+            int direction = _random.Next(4);
+
+            // Calculate coordinates of potential next room
+            int nextX = currentRoom.X;
+            int nextY = currentRoom.Y;
+            switch (direction)
+            {
+                case 0: nextY++; break; //  North
+                case 1: nextX++; break; //  East
+                case 2: nextY--; break; //  South
+                case 3: nextX--; break; //  West
+            }
+
+            string nextPositionKey = $"{nextX},{nextY}";
+            Room? nextRoom;
+
+            // Check if a room already exists at the new coordinates
+            if (!map.TryGetValue(nextPositionKey, out nextRoom))
+            {
+                // Create a new room if it doesn't exists
+                nextRoom = new Room(nextX, nextY);
+                map.Add(nextPositionKey, nextRoom);
+
+                // --- MONSTER & ITEM SPAWNING ---
+                if (i == numberOfRooms - 2)
+                {
+                    // ---- SPAWN THE BOSS ---
+                    int randomIndex = _random.Next(_gameData.MasterBossTable.Count);
+                    Monster randomBoss = _gameData.MasterBossTable[randomIndex];
+                    Monster BossForRoom = new Monster(randomBoss.Name, randomBoss.MaxHealth, randomBoss.Stats["Strength"], randomBoss.Stats["Dexterity"], randomBoss.ExperienceValue, randomBoss.Stats["Intellect"], randomBoss.Loot);
+                    nextRoom.MonstersInRoom.Add(BossForRoom);
+                }
+                else if (_random.Next(100) < 50)
+                {
+                    // define loot, create monster, and add to room's list
+                    int randomIndex = _random.Next(_gameData.MasterMonsterTable.Count);
+                    Monster randomMonster = _gameData.MasterMonsterTable[randomIndex];
+                    Monster monsterForRoom = new Monster(randomMonster.Name, randomMonster.MaxHealth, randomMonster.Stats["Strength"], randomMonster.Stats["Dexterity"], randomMonster.ExperienceValue, randomMonster.Stats["Intellect"], randomMonster.Loot);
+                    nextRoom.MonstersInRoom.Add(monsterForRoom);
+
+                    // Update the room's description to mention the monster
+                    nextRoom.Name = "Monster Room";
+                    nextRoom.Description = $"The air is thick with the stench of death and decay.";
+                }
+                else
+                {
+                    int randomIndex = _random.Next(_gameData.MasterLootTable.Count);
+                    Item lootItem = _gameData.MasterLootTable[randomIndex];
+                    nextRoom.ItemsInRoom.Add(lootItem);
+
+                    nextRoom.Name = "Treasure Room";
+                    nextRoom.Description = $"You feel a sense of calm here, a brief respite from the darkness.";
+                }
+
+                // Link the new room to the current room
+                switch (direction)
+                {
+                    case 0: // Moved North
+                        currentRoom.North = nextRoom;
+                        nextRoom.South = currentRoom;
+                        break;
+                    case 1: // Moved East
+                        currentRoom.East = nextRoom;
+                        nextRoom.West = currentRoom;
+                        break;
+                    case 2: // Moved South
+                        currentRoom.South = nextRoom;
+                        nextRoom.North = currentRoom;
+                        break;
+                    case 3: // Moved West
+                        currentRoom.West = nextRoom;
+                        nextRoom.East = currentRoom;
+                        break;
+                }
+            }
+            // Main walker logic: 80% chance to continue the current path. 
+            // The 20% chance to jump to a random existing room encourages branching for a less linear map.
+            if (_random.Next(100) < 80)
+            {
+                currentRoom = nextRoom;
+            }
+            else
+            {
+                var allRooms = map.Values.ToList();
+                currentRoom = allRooms[_random.Next(allRooms.Count)];
+            }
+        }
+        // --- RETURN TO START ---
+        return startRoom;
+    }
+}
+--- World/Room.cs ---
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.World;
+public class Room
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public List<Monster> MonstersInRoom { get; set; }
+    public List<Item> ItemsInRoom { get; set; }
+
+    // Coordinates on the map grid
+    public int X { get; set; }
+    public int Y { get; set; }
+
+    // Connection to other rooms
+    public Room? North { get; set; }
+    public Room? South { get; set; }
+    public Room? East { get; set; }
+    public Room? West { get; set; }
+
+    // TODO: Add a list of Monsters and Items
+
+    public Room(int x, int y)
+    {
+        X = x;
+        Y = y;
+        Name = "Empty Room";
+        Description = "A dusty, featureless stone room.";
+        MonstersInRoom = new List<Monster>();
+        ItemsInRoom = new List<Item>();
+    }
+}
+--- csharp-roguelike-rpg.csproj ---
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>csharp_roguelike_rpg</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
+

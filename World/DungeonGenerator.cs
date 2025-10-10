@@ -1,4 +1,6 @@
-namespace csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.World;
 
 public class DungeonGenerator
 {

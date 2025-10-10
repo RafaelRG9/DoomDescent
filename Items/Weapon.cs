@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Items;
 public class Weapon : Item
 {
     public int Damage { get; set; }

@@ -1,3 +1,7 @@
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Items;
+using csharp_roguelike_rpg.Systems;
+
 public class GameData
 {
     public List<Item> MasterLootTable { get; private set; }

@@ -1,3 +1,5 @@
+namespace csharp_roguelike_rpg.Characters;
+
 public abstract class Character
 {
     public string Name { get; set; }

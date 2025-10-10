@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Items;
 public class Potion : Item
 {
     public int HealthToRestore { get; set; }

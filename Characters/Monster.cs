@@ -1,3 +1,7 @@
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+
 public class Monster : Character
 {
     public Item? Loot { get; set; }

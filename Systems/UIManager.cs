@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Systems;
 public static class UIManager
 {
     public static void SlowPrint(string text, ConsoleColor? color = null)

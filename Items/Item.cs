@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Items;
 public class Item
 {
     public string Name { get; set; }

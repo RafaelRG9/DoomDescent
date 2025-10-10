@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Items;
 public class CraftingRecipe
 {
     // Key is the item, the value is the required quantity

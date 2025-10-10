@@ -1,3 +1,7 @@
+using csharp_roguelike_rpg.Characters;
+using csharp_roguelike_rpg.Systems;
+namespace csharp_roguelike_rpg.Abilities;
+
 public class DoubleStrike : Ability
 {
     public DoubleStrike()

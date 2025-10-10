@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Items;
 public class Armor : Item
 {
     public int Defense { get; set; }

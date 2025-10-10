@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Systems;
 using csharp_roguelike_rpg.Characters;
 
 public abstract class Modifier

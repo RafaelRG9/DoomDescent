@@ -1,3 +1,4 @@
+namespace csharp_roguelike_rpg.Systems;
 public enum Rarity
 {
     Common,     // Gray

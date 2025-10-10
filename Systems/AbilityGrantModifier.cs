@@ -1,3 +1,5 @@
+namespace csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.Abilities;
 using csharp_roguelike_rpg.Characters;
 
 public class AbilityGrantModifier : Modifier
