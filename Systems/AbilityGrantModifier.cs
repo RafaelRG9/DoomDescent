@@ -18,6 +18,6 @@ public class AbilityGrantModifier : Modifier
     {
         player.Abilities.Add(_abilityToGrant);
         UIManager.SlowPrint($"You have learned a new ability: {_abilityToGrant.Name}!", ConsoleColor.Magenta);
-         UIManager.SlowPrint($"{_abilityToGrant.Description}", ConsoleColor.Magenta);
+        UIManager.SlowPrint($"{_abilityToGrant.Description}", ConsoleColor.Magenta);
     }
 }

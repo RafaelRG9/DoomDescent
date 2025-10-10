@@ -71,9 +71,9 @@ public class GameData
             // Level 3 Talents
             [3] = new List<Modifier>
         {
-            new StatModifier("Thick Hide", "Who needs brains when you have brawn? and you have neither. Permanently increases Max Health by 15.", Rarity.Uncommon, "MaxHealth", 15),
-            new StatModifier("Weapon Master", "You smash things harder now, woop!. Permanently increases Strength by 2.", Rarity.Uncommon, "Strength", 2),
-            new StatModifier("Adrenaline Rush", "You feel less pain now, big deal. Permanently increases Dexterity by 1.", Rarity.Common, "Dexterity", 1)
+            new StatModifier("Thick Hide", "Who needs brains when you have brawn? and you have neither. Permanently increases Max Health by 15.", Rarity.Uncommon, "MaxHealth", 15, "null",  0),
+            new StatModifier("Weapon Master", "You smash things harder now, woop!. Permanently increases Strength by 2.", Rarity.Uncommon, "Strength", 2, "null", 0),
+            new StatModifier("Adrenaline Rush", "You feel less pain now, big deal. Permanently increases Dexterity by 1.", Rarity.Common, "Dexterity", 1, "null", 0)
         }
             // TODO: Add extra tiers
         };
@@ -84,9 +84,9 @@ public class GameData
             // Level 3 Talents
             [3] = new List<Modifier>
         {
-            new StatModifier("Fleet Footed", "I AM SPEED!. Permanently increases Dexterity by 2.", Rarity.Uncommon, "Dexterity", 2),
-            new StatModifier("Precise Strikes", "Your stab got stabbier!. Permanently increases Strength by 1.", Rarity.Common, "Strength", 1),
-            new StatModifier("Toughness", "You are not as feeble as you think. Permanently increases Max Health by 10.", Rarity.Common, "MaxHealth", 10)
+            new StatModifier("Fleet Footed", "I AM SPEED!. Permanently increases Dexterity by 2.", Rarity.Uncommon, "Dexterity", 2, "null", 0),
+            new StatModifier("Precise Strikes", "Your stab got stabbier!. Permanently increases Strength by 1.", Rarity.Common, "Strength", 1, "null", 0),
+            new StatModifier("Toughness", "You are not as feeble as you think. Permanently increases Max Health by 10.", Rarity.Common, "MaxHealth", 10, "null", 0)
         }
         };
 
@@ -96,9 +96,9 @@ public class GameData
             // Level 3 Talents for Mage
             [3] = new List<Modifier>
         {
-            new StatModifier("Arcane Intellect", "You are smarter than a fifth grader!. Permanently increases Intellect by 3.", Rarity.Uncommon, "Intellect", 3),
-            new StatModifier("Glass Cannon", "Do I really need to explain this?. +2 Intellect, -5 Max Health.", Rarity.Epic, "Intellect", 2), // TODO: update StatModifier to handle negative values on other stats
-            new StatModifier("Stamina", "Basic white mage buff. Permanently increases Max Health by 12.", Rarity.Common, "MaxHealth", 12)
+            new StatModifier("Arcane Intellect", "You are smarter than a fifth grader!. Permanently increases Intellect by 3.", Rarity.Uncommon, "Intellect", 3, "null", 0),
+            new StatModifier("Glass Cannon", "Do I really need to explain this?. +2 Intellect, -5 Max Health.", Rarity.Epic, "Intellect", 2, "Health", 5),
+            new StatModifier("Stamina", "Basic white mage buff. Permanently increases Max Health by 12.", Rarity.Common, "MaxHealth", 12, "null", 0)
         }
         };
     }
