@@ -26,6 +26,11 @@ public class GameData
         Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
         Item orcTusk = new Item("Orc Tusk", "surprisingly clean, this Orc flossed!");
         Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "Nothing says baddass like a DRAGON CLAW for a weapon. Deals 15 damage.", 15);
+        Item boneChips = new Item("Bone Chips", "Probably not useful for soup.");
+        Weapon ogreClub = new Weapon("Ogre's Club", "The only thing they know how to use well. +5 Damage.", 5);
+        Item corrosiveOoze = new Item("Corrosive Ooze", "A vial of bubbling green goo. Don't drink it. Seriously.");
+        Item impHeart = new Item("Imp's Heart", "Still warm and faintly glowing. Probably useful in some forbidden recipe, or trash, your call.");
+        Item spiderSilk = new Item("Spider Silk", "Strong and sticky. Maybe could be woven into some light armor.");
 
         // Crafted Items
         Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
@@ -49,6 +54,11 @@ public class GameData
         // --- MASTER MONSTER TABLE ---
         MasterMonsterTable.Add(new Goblin(goblinHide));
         MasterMonsterTable.Add(new Orc(orcTusk));
+        MasterMonsterTable.Add(new GiantSpider(spiderSilk));
+        MasterMonsterTable.Add(new AnimatedSkeleton(boneChips));
+        MasterMonsterTable.Add(new CorrosiveSlime(corrosiveOoze));
+        MasterMonsterTable.Add(new FireImp(impHeart));
+        MasterMonsterTable.Add(new Ogre(ogreClub));
 
 
         // --- MASTER BOSS TABLE ---
