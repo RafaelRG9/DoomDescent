@@ -22,18 +22,23 @@ public class GameData
 
         // --- CRAFTED ITEMS AND MATERIALS ---
 
-        // Materials and Monster Drops
+        // Materials
         Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
         Item orcTusk = new Item("Orc Tusk", "surprisingly clean, this Orc flossed!");
-        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "Nothing says baddass like a DRAGON CLAW for a weapon. Deals 15 damage.", 15);
         Item boneChips = new Item("Bone Chips", "Probably not useful for soup.");
-        Weapon ogreClub = new Weapon("Ogre's Club", "The only thing they know how to use well. +5 Damage.", 5);
         Item corrosiveOoze = new Item("Corrosive Ooze", "A vial of bubbling green goo. Don't drink it. Seriously.");
         Item impHeart = new Item("Imp's Heart", "Still warm and faintly glowing. Probably useful in some forbidden recipe, or trash, your call.");
         Item spiderSilk = new Item("Spider Silk", "Strong and sticky. Maybe could be woven into some light armor.");
 
         // Crafted Items
-        Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
+        Armor leatherArmor = new Armor("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!. Gves +2 Defense", 2);
+        Armor silkArmor = new Armor("Silk Armor", "How did you even weave this yourself? I guess 'cause magic!. Gives +3 Defense", 3);
+        Weapon boneSword = new Weapon("Bone Sword", "Looks flimsy, better than nothing, I guess. +2 Damage.", 2);
+        Weapon orcTuskSword = new Weapon("Orc Tusk Sword", "Now we are talking, something a little more damaging. +6 Damage.", 6);
+
+        // Weapon drops
+        Weapon ogreClub = new Weapon("Ogre's Club", "The only thing they know how to use well. +5 Damage.", 5);
+        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "Nothing says baddass like a DRAGON CLAW for a weapon. Deals 15 damage.", 15);
 
         // --- SPECIAL ITEMS ---
         Item StairsDown = new Item("Stairs Down", "A staircase leading deeper into the darkness...");
