@@ -58,6 +58,7 @@ public class Player : Character
                 break;
         }
         Health = MaxHealth;
+        Energy = MaxEnergy;
         Class = playerClass;
     }
 
@@ -110,6 +111,7 @@ public class Player : Character
             int strengthIncrease = 0;
             int dexterityIncrease = 0;
             int intellectIncrease = 0;
+            int energyIncrease = 0;
 
             switch (Class)
             {
@@ -118,26 +120,31 @@ public class Player : Character
                     strengthIncrease = 3;
                     dexterityIncrease = 1;
                     intellectIncrease = 0;
+                    energyIncrease = 2;
                     break;
                 case PlayerClass.Rogue:
                     healthIncrease = 10;
                     strengthIncrease = 1;
                     dexterityIncrease = 3;
                     intellectIncrease = 1;
+                    energyIncrease = 3;
                     break;
                 case PlayerClass.Mage:
                     healthIncrease = 8;
                     strengthIncrease = 1;
                     dexterityIncrease = 1;
                     intellectIncrease = 3;
+                    energyIncrease = 5;
                     break;
             }
 
             MaxHealth += healthIncrease;
+            MaxEnergy += energyIncrease;
             Stats["Strength"] += strengthIncrease;
             Stats["Dexterity"] += dexterityIncrease;
             Stats["Intellect"] += intellectIncrease;
             Health = MaxHealth;
+            Energy = MaxEnergy;
             ExperienceToNextLevel = Level * 100;
         }
         return leveledUp;

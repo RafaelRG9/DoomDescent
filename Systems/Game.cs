@@ -655,7 +655,7 @@ public class Game
                         }
 
                         _player.Health -= damageToPlayer;
-                        UIManager.SlowPrint($"The {actingMonster.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                        UIManager.SlowPrint($"The {actingMonster.Name} attacks, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
                     }
                     else
                     {
@@ -687,6 +687,7 @@ public class Game
                 // End game or offer to continue
                 UIManager.SlowPrint("But this is just the beginning of your journey...", ConsoleColor.Yellow);
                 UIManager.SlowPrint("Prepare yourself for even greater challenges ahead!", ConsoleColor.Yellow);
+                return false;
 
             }
             // If Monster is a boss, spawn the stairs
@@ -696,6 +697,17 @@ public class Game
                 {
                     UIManager.SlowPrint("A staircase reveals itself in the back of the room!", ConsoleColor.Yellow);
                     _player.CurrentRoom.ItemsInRoom.Add(_gameData.StairsDown);
+                    UIManager.SlowPrint("Ready for the next floor?", ConsoleColor.Yellow);
+                    Console.Write("(y/n)> ");
+                    if (Console.ReadLine()?.ToLower() == "y")
+                    {
+                        UIManager.SlowPrint("Fool, this was just the beginning...", ConsoleColor.Magenta);
+                        SetupNextFloor();// End the game loop and descend
+                    }
+                    else
+                    {
+                        UIManager.SlowPrint("Want to explore more rooms? smart!", ConsoleColor.Yellow);
+                    }
                 }
             }
             if (monsterToFight.Loot != null)
@@ -710,18 +722,6 @@ public class Game
             {
                 UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
                 HandleTalentSelection();
-            }
-            UIManager.SlowPrint("Ready for the next floor?", ConsoleColor.Yellow);
-            Console.Write("(y/n)> ");
-            string? input = Console.ReadLine();
-            if (input?.ToLower() == "y")
-            {
-                UIManager.SlowPrint("Fool, this was just the beginning...", ConsoleColor.Magenta);
-                SetupNextFloor();// End the game loop and descend
-            }
-            else
-            {
-                UIManager.SlowPrint("Want to explore more rooms? smart!", ConsoleColor.Yellow);
             }
             return true;
         }
@@ -862,9 +862,8 @@ public class Game
                     }
                     else
                     {
-                        line += "[ ]"; // Empty room
+                        line += "[#]"; // Visited room
                     }
-                    line += "[#]"; // Visited room
                 }
                 else
                 {
