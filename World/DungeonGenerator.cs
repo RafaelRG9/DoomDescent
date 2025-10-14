@@ -1,5 +1,6 @@
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
+using csharp_roguelike_rpg.Systems;
 namespace csharp_roguelike_rpg.World;
 
 public class DungeonGenerator
@@ -51,9 +52,8 @@ public class DungeonGenerator
                 if (i == numberOfRooms - 2)
                 {
                     // --- SPAWN THE BOSS ---
-                    Monster bossTemplate = _gameData.MasterBossTable[0];
-                    Monster bossForRoom = bossTemplate.Clone(); // Clone the template
-                    bossForRoom.ScaleStats(floorLevel);         // Scale the clone
+                    Monster bossTemplate = _gameData.MasterBossTable[floorLevel - 1]; // Select boss based on floor level
+                    Monster bossForRoom = bossTemplate.Clone();         // Scale the clone
                     nextRoom.MonstersInRoom.Add(bossForRoom);
 
                     nextRoom.Name = "Boss Chamber";

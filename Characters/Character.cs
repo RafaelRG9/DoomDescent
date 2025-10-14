@@ -7,10 +7,11 @@ public abstract class Character
     public int MaxHealth { get; set; }
     public int Energy { get; set; }
     public int MaxEnergy { get; set; }
+    public int Lifesteal { get; set; }
     public Dictionary<string, int> Stats { get; private set; }
     public bool IsDefending { get; set; }
 
-    public Character(string name, int health, int strength, int dexterity, int intellect)
+    public Character(string name, int health, int strength, int dexterity, int intellect, int lifesteal = 0)
     {
         Name = name;
         MaxHealth = health;
@@ -19,7 +20,8 @@ public abstract class Character
         {
             {"Strength", strength},
             {"Dexterity", dexterity},
-            {"Intellect", intellect}
+            {"Intellect", intellect },
+            {"Lifesteal", lifesteal}
         };
     }
 }

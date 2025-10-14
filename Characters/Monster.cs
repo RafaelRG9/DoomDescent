@@ -30,20 +30,20 @@ public class Monster : Character
     }
 
     public void ScaleStats(int level)
-{
-    Level = level;
-    
-    // Get the original base stats from the constructor
-    int baseHealth = MaxHealth;
-    int baseStrength = Stats["Strength"];
-    int baseDexterity = Stats["Dexterity"];
-    int baseIntellect = Stats["Intellect"];
+    {
+        Level = level;
 
-    // Apply the scaling formula
-    MaxHealth = baseHealth + (level * 5);
-    Health = MaxHealth;
-    Stats["Strength"] = baseStrength + (level * 2);
-    Stats["Dexterity"] = baseDexterity + (level * 1);
-    Stats["Intellect"] = baseIntellect + (level * 1);
-}
+        // Get the original base stats from the constructor
+        int baseHealth = MaxHealth;
+        int baseStrength = Stats["Strength"];
+        int baseDexterity = Stats["Dexterity"];
+        int baseIntellect = Stats["Intellect"];
+
+        // Apply the scaling formula
+        MaxHealth = baseHealth + (level * 5);
+        Health = MaxHealth;
+        Stats["Strength"] = baseStrength + (level * 2);
+        Stats["Dexterity"] = baseDexterity + (level * 1);
+        Stats["Intellect"] = baseIntellect + (level * 1);
+    }
 }

@@ -1,6 +1,7 @@
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
 using csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.Abilities;
 
 public class GameData
 {
@@ -39,6 +40,16 @@ public class GameData
         // Weapon drops
         Weapon ogreClub = new Weapon("Ogre's Club", "The only thing they know how to use well. +5 Damage.", 5);
         Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "Nothing says baddass like a DRAGON CLAW for a weapon. Deals 15 damage.", 15);
+        Weapon goblinSmasher = new Weapon("Goblin Smasher", "A crudely-named but surprisingly effective mace. Grants +7 Damage.", 7);
+        Weapon labyrinthAxe = new Weapon("Labyrinth Axe", "A massive, perfectly balanced axe that smells faintly of bull. Grants +20 Damage.", 20);
+
+        //Armor drops
+        Armor noblesRaiment = new Armor("Noble's Raiment", "Impeccably stylish and surprisingly protective. Grants +18 Defense.", 18);
+        Armor trollsHideArmor = new Armor("Troll-Hide Armor", "Thick, pungent, and still slightly regenerating. Grants +10 Defense.", 10);
+
+        //Relics
+        Relic lichsPhylactery = new Relic("Lich's Phylactery", "A glowing gem that pulses with stolen life force.", new StatModifier("Lifesteal", "Your attacks now heal you for a small amount.", Rarity.Epic, "Lifesteal", 2, "null", 0));
+        Relic heartOfTheInferno = new Relic("Heart of the Inferno", "The still-burning heart of a dragon. You feel its power.", new AbilityGrantModifier("Dragon's Breath", "Grants the powerful Fireball ability.", Rarity.Unique, new Fireball()));
 
         // --- SPECIAL ITEMS ---
         Item StairsDown = new Item("Stairs Down", "A staircase leading deeper into the darkness...");
@@ -67,7 +78,13 @@ public class GameData
 
 
         // --- MASTER BOSS TABLE ---
-        MasterBossTable.Add(new Boss(dragonClaw));
+        MasterBossTable.Add(new BossGoblinKing(goblinSmasher)); // Level 1 Boss
+        MasterBossTable.Add(new BossTrollChieftain(trollsHideArmor)); // Level 2 Boss
+        MasterBossTable.Add(new BossLichLord(lichsPhylactery)); // Level 3 Boss
+        MasterBossTable.Add(new BossMinotaurGuardian(labyrinthAxe)); // Level 4 Boss     
+        MasterBossTable.Add(new BossVampCount(noblesRaiment)); // Level 5 Boss
+        MasterBossTable.Add(new Boss(dragonClaw)); // Final Boss
+
 
         // --- CRAFTING TABLE ---
         CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>

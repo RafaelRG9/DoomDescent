@@ -35,6 +35,7 @@ public class Player : Character
                 Stats["Strength"] = 12;
                 Stats["Dexterity"] = 4;
                 Stats["Intellect"] = 3;
+                Stats["Lifesteal"] = 0;
                 Abilities.Add(new PowerAttack());
                 break;
             case PlayerClass.Rogue:
@@ -43,6 +44,7 @@ public class Player : Character
                 Stats["Strength"] = 8;
                 Stats["Dexterity"] = 10;
                 Stats["Intellect"] = 5;
+                Stats["Lifesteal"] = 0;
                 Abilities.Add(new DoubleStrike());
                 break;
             case PlayerClass.Mage:
@@ -51,6 +53,7 @@ public class Player : Character
                 Stats["Strength"] = 5;
                 Stats["Dexterity"] = 6;
                 Stats["Intellect"] = 12;
+                Stats["Lifesteal"] = 0;
                 Abilities.Add(new Fireball());
                 break;
         }

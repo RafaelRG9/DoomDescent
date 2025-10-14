@@ -4,7 +4,7 @@ namespace csharp_roguelike_rpg.Characters;
 public class Boss : Monster
 {
     public Boss(Item? bossLoot)
-        : base("Dragon", 100, 15, 8, 1000, 10, bossLoot)
+        : base("Ignis, the Ancient Flame", 500, 30, 10, 20000, 20, bossLoot)
     {
 
     }

@@ -1,5 +1,6 @@
 namespace csharp_roguelike_rpg.Systems;
 
+using System.Net.Quic;
 using csharp_roguelike_rpg.Abilities;
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
@@ -67,6 +68,24 @@ public class Game
         _player = new Player(playerName, chosenClass);
         _player.CurrentRoom = startingRoom;
         _player.VisitedRooms.Add(startingRoom);
+    }
+
+    private void SetupNextFloor()
+    {
+        _currentFloor++;
+        UIManager.SlowPrint($"You descend to floor {_currentFloor}...", ConsoleColor.Magenta);
+
+        // Re-generate the world for the new floor
+        Room startingRoom = _generator.Generate(10, _currentFloor);
+        _player.CurrentRoom = startingRoom;
+        _player.VisitedRooms.Clear(); // Clear the map for the new floor
+        _player.VisitedRooms.Add(startingRoom);
+    }
+
+    private void HandlePlayerDeath()
+    {
+        UIManager.SlowPrint("\nYou have fallen in the dark...", ConsoleColor.Red);
+        UIManager.SlowPrint("Your adventure ends here.", ConsoleColor.Red);
     }
 
 
@@ -140,7 +159,7 @@ public class Game
                         Console.WriteLine($" - {stat.Key}: {stat.Value}");
                     }
                     Console.WriteLine(" Abilities:");
-                    foreach(var ability in _player.Abilities)
+                    foreach (var ability in _player.Abilities)
                     {
                         Console.WriteLine($" - {ability.Name}(Cost: {ability.EnergyCost}): {ability.Description}");
                     }
@@ -435,34 +454,40 @@ public class Game
     }
     public void Run()
     {
+        // The master "Play Again?" loop
         while (true)
         {
-            SetupNewGame();
+            SetupNewGame(); // Creates a new character on floor 1
 
-            while (true) // Master "Play Again?" loop
+            // The "Dungeon Floor" loop for a single run
+            bool playerIsAlive = true;
+            while (playerIsAlive)
             {
                 DescribeRoom();
-                bool descend = GameLoop(); // True if player descends, false if they quit
+                bool shouldDescend = GameLoop();
 
-                if (descend)
+                if (_player.Health <= 0)
                 {
-                    _currentFloor++;
-                    UIManager.SlowPrint($"You descend to floor {_currentFloor}...", ConsoleColor.Magenta);
-
-                    // Re-generate the world for the new floor
-                    Room startingRoom = _generator.Generate(10, _currentFloor);
-                    _player.CurrentRoom = startingRoom;
-                    _player.VisitedRooms.Clear(); // Clear the map for the new floor
-                    _player.VisitedRooms.Add(startingRoom);
+                    playerIsAlive = false; // Player died, exit the floor loop
                 }
-                else
+                else if (shouldDescend)
                 {
-                    // If they didn't descend (i.e., they quit), break the inner floor loop
-                    break;
+                    // Player is descending to the next floor
+                    _currentFloor++;
+                    SetupNextFloor();
+                }
+                else // Player chose to quit
+                {
+                    playerIsAlive = false; // Exit the floor loop
                 }
             }
 
-            // This is only reached if the inner loop was broken (by quitting or dying)
+            // This code is reached when the floor loop ends (player died or quit)
+            if (_player.Health <= 0)
+            {
+                HandlePlayerDeath();
+            }
+
             UIManager.SlowPrint("\nPlay Again? (y/n)");
             string? playAgain = Console.ReadLine();
             if (playAgain?.ToLower() != "y")
@@ -502,7 +527,10 @@ public class Game
             // Display Status
             Console.WriteLine("\n--------------------");
             Console.WriteLine($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
+            Console.WriteLine($"Energy {_player.Energy}/{_player.MaxEnergy}");
+            Console.WriteLine(" ");
             Console.WriteLine($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
+            Console.WriteLine($"Energy: {monsterToFight.Energy}/{monsterToFight.MaxEnergy}");
             Console.WriteLine("\n--------------------");
 
             Console.WriteLine($"\n--- ROUND {round} ---");
@@ -550,6 +578,18 @@ public class Game
                             int damageDealt = _player.GetTotalStrength();
                             monsterToFight.Health -= damageDealt;
                             UIManager.SlowPrint($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
+
+                            // Apply lifesteal if applicable
+                            if (_player.Stats["Lifesteal"] > 0)
+                            {
+                                int lifestealAmount = _player.Stats["Lifesteal"] * damageDealt / 100;
+                                _player.Health += lifestealAmount;
+                                if (_player.Health > _player.MaxHealth)
+                                {
+                                    _player.Health = _player.MaxHealth; // Cap health at max health
+                                }
+                                UIManager.SlowPrint($"You steal {lifestealAmount} health from the {monsterToFight.Name}!", ConsoleColor.Green);
+                            }
                         }
                         else
                         {
@@ -581,7 +621,15 @@ public class Game
                             UIManager.SlowPrint("Invalid command! You hesitate and lose your turn.");
                         }
                     }
+                    Console.WriteLine("\n--------------------");
+                    Console.WriteLine($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
+                    Console.WriteLine($"Energy {_player.Energy}/{_player.MaxEnergy}");
+                    Console.WriteLine(" ");
+                    Console.WriteLine($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
+                    Console.WriteLine($"Energy: {monsterToFight.Energy}/{monsterToFight.MaxEnergy}");
+                    Console.WriteLine("\n--------------------");
                 }
+
                 else if (character is Monster actingMonster)
                 {
                     // --- NEW TO-HIT LOGIC FOR MONSTER ---
@@ -616,6 +664,12 @@ public class Game
                     }
                 }
                 round++;
+                UIManager.SlowPrint($"\n---------END OF ROUND {round}-----------");
+                UIManager.SlowPrint($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
+                UIManager.SlowPrint($"Energy: {_player.Energy}/{_player.MaxEnergy}");
+                UIManager.SlowPrint($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
+                UIManager.SlowPrint($"Energy: {monsterToFight.Energy}/{monsterToFight.MaxEnergy}");
+                UIManager.SlowPrint("\n----------------------------------");
             }
         }
 
@@ -626,8 +680,17 @@ public class Game
         {
             UIManager.SlowPrint($"You defeated the {monsterToFight.Name}!");
 
+            if (monsterToFight is Boss)
+            {
+                UIManager.SlowPrint("You have defeated a boss! You feel a strange energy in the air...", ConsoleColor.Yellow);
+                UIManager.SlowPrint("You have reached the end of my dungeon, I am impressed!", ConsoleColor.Yellow);
+                // End game or offer to continue
+                UIManager.SlowPrint("But this is just the beginning of your journey...", ConsoleColor.Yellow);
+                UIManager.SlowPrint("Prepare yourself for even greater challenges ahead!", ConsoleColor.Yellow);
+
+            }
             // If Monster is a boss, spawn the stairs
-            if (monsterToFight is Boss && _player.CurrentRoom != null)
+            if (_gameData.MasterBossTable.Contains(monsterToFight) && _player.CurrentRoom != null)
             {
                 if (_gameData.StairsDown != null)
                 {
@@ -647,6 +710,18 @@ public class Game
             {
                 UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
                 HandleTalentSelection();
+            }
+            UIManager.SlowPrint("Ready for the next floor?", ConsoleColor.Yellow);
+            Console.Write("(y/n)> ");
+            string? input = Console.ReadLine();
+            if (input?.ToLower() == "y")
+            {
+                UIManager.SlowPrint("Fool, this was just the beginning...", ConsoleColor.Magenta);
+                SetupNextFloor();// End the game loop and descend
+            }
+            else
+            {
+                UIManager.SlowPrint("Want to explore more rooms? smart!", ConsoleColor.Yellow);
             }
             return true;
         }
@@ -693,7 +768,26 @@ public class Game
     {
         if (newRoom != null)
         {
-            // Move Player
+            // Check for boss room and confirm
+            if (newRoom.Name == "Boss Chamber")
+            {
+                UIManager.SlowPrint("You sense a foul stench coming from the other side of this door...", ConsoleColor.Red);
+                UIManager.SlowPrint("There is a boss on the other side", ConsoleColor.Red);
+                UIManager.SlowPrint("Do you want to proceed?", ConsoleColor.Red);
+                Console.Write("(y/n)> ");
+                string? input = Console.ReadLine();
+                if (input?.ToLower() != "y")
+                {
+                    UIManager.SlowPrint("You decide to stay back and prepare yourself...", ConsoleColor.Yellow);
+                    return true;
+                }
+                else
+                {
+                    UIManager.SlowPrint("You bravely step into the chamber...", ConsoleColor.Yellow);
+                }
+            }
+
+            // Move the player to the new room
             _player.CurrentRoom = newRoom;
             _player.VisitedRooms.Add(newRoom);
             DescribeRoom();
@@ -754,6 +848,22 @@ public class Game
                 // Check if a visited room exists at the current coordinate.
                 else if (_player.VisitedRooms.Any(r => r.X == x && r.Y == y))
                 {
+                    if (_player.VisitedRooms.First(r => r.X == x && r.Y == y).MonstersInRoom.Any())
+                    {
+                        line += "[M]"; // Room with monsters
+                    }
+                    else if (_player.VisitedRooms.First(r => r.X == x && r.Y == y).ItemsInRoom.Any())
+                    {
+                        line += "[T]"; // Room with items
+                    }
+                    else if (_player.VisitedRooms.First(r => r.X == x && r.Y == y).Name == "Boss Chamber")
+                    {
+                        line += "[B]"; // Boss room
+                    }
+                    else
+                    {
+                        line += "[ ]"; // Empty room
+                    }
                     line += "[#]"; // Visited room
                 }
                 else
@@ -764,6 +874,7 @@ public class Game
             Console.WriteLine(line);
         }
         Console.WriteLine("-------------------");
+        Console.WriteLine("Legend: P=Player, M=Monsters, T=Treasure, B=Boss");
     }
 
     private void HandleTalentSelection()
