@@ -24,4 +24,14 @@ public abstract class Character
             {"Lifesteal", lifesteal}
         };
     }
+
+    public virtual int GetTotalStrength()
+    {
+        return Stats["Strength"];
+    }
+
+    public virtual int GetTotalDefense()
+    {
+        return 0;
+    }
 }

@@ -14,7 +14,7 @@ public class DoubleStrike : Ability
     public override void Use(Character caster, Character target)
     {
         // Each hit does 75% of the caster's Dexterity as damage
-        int damagePerHit = (int)(caster.Stats["Dexterity"] * 0.75);
+        int damagePerHit = (int)(caster.GetTotalStrength() * 0.75);
 
         // First Hit
         target.Health -= damagePerHit;

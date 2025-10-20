@@ -89,6 +89,19 @@ public class PowerAttack : Ability
         UIManager.SlowPrint($"{caster.Name} uses {Name}, dealing {damage} damage to {target.Name}!");
     }
 }
+--- Characters/AnimatedSkeleton.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+
+public class AnimatedSkeleton : Monster
+{
+    public AnimatedSkeleton(Item? loot)
+        : base("Animated Skeleton", 15, 6, 12, 40, 1, loot)
+    {
+
+    }
+}
 --- Characters/Boss.cs ---
 using csharp_roguelike_rpg.Items;
 namespace csharp_roguelike_rpg.Characters;
@@ -96,7 +109,67 @@ namespace csharp_roguelike_rpg.Characters;
 public class Boss : Monster
 {
     public Boss(Item? bossLoot)
-        : base("Dragon", 100, 15, 8, 1000, 10, bossLoot)
+        : base("Ignis, the Ancient Flame", 500, 30, 10, 20000, 20, bossLoot)
+    {
+
+    }
+}
+--- Characters/BossGoblinKing.cs ---
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.Characters;
+
+public class BossGoblinKing : Monster
+{
+    public BossGoblinKing(Item? bossLoot)
+        : base("Goblin King Gnash", 80, 14, 8, 500, 6, bossLoot)
+    {
+
+    }
+}
+--- Characters/BossLichLord.cs ---
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.Characters;
+
+public class BossLichLord : Monster
+{
+    public BossLichLord(Item? bossLoot)
+        : base("Lich Lord Azmoth", 100, 8, 10, 2500, 20, bossLoot)
+    {
+
+    }
+}
+--- Characters/BossMinotaur.cs ---
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.Characters;
+
+public class BossMinotaurGuardian : Monster
+{
+    public BossMinotaurGuardian(Item? bossLoot)
+        : base("Minotaur Guardian", 180, 22, 12, 1200, 5, bossLoot)
+    {
+
+    }
+}
+--- Characters/BossTrollChieftain.cs ---
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.Characters;
+
+public class BossTrollChieftain : Monster
+{
+    public BossTrollChieftain(Item? bossLoot)
+        : base("Troll Chieftain Grokk", 150, 18, 2, 1200, 3, bossLoot)
+    {
+
+    }
+}
+--- Characters/BossVampCount.cs ---
+using csharp_roguelike_rpg.Items;
+namespace csharp_roguelike_rpg.Characters;
+
+public class BossVampCount : Monster
+{
+    public BossVampCount(Item? bossLoot)
+        : base("Vampire Count Valerius", 200, 18, 18, 7500, 15, bossLoot)
     {
 
     }
@@ -106,14 +179,16 @@ namespace csharp_roguelike_rpg.Characters;
 
 public abstract class Character
 {
-    // TODO Add Energy to have Abilities energy cost be used in combat, this should be the last thing to complete the game
     public string Name { get; set; }
     public int Health { get; set; }
     public int MaxHealth { get; set; }
+    public int Energy { get; set; }
+    public int MaxEnergy { get; set; }
+    public int Lifesteal { get; set; }
     public Dictionary<string, int> Stats { get; private set; }
     public bool IsDefending { get; set; }
 
-    public Character(string name, int health, int strength, int dexterity, int intellect)
+    public Character(string name, int health, int strength, int dexterity, int intellect, int lifesteal = 0)
     {
         Name = name;
         MaxHealth = health;
@@ -122,8 +197,48 @@ public abstract class Character
         {
             {"Strength", strength},
             {"Dexterity", dexterity},
-            {"Intellect", intellect}
+            {"Intellect", intellect },
+            {"Lifesteal", lifesteal}
         };
+    }
+}
+--- Characters/CorrosiveSlime.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+
+public class CorrosiveSlime : Monster
+{
+    public CorrosiveSlime(Item? loot)
+        : base("Corrosive Slime", 30, 7, 2, 35, 1, loot)
+    {
+
+    }
+}
+--- Characters/FireImp.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+
+public class FireImp : Monster
+{
+    public FireImp(Item? loot)
+        : base("Fire Imp", 12, 3, 14, 70, 8, loot)
+    {
+
+    }
+}
+--- Characters/GiantSpider.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+
+public class GiantSpider : Monster
+{
+    public GiantSpider(Item? loot)
+        : base("Giant Spider", 25, 9, 15, 80, 2, loot)
+    {
+
     }
 }
 --- Characters/Goblin.cs ---
@@ -133,7 +248,7 @@ namespace csharp_roguelike_rpg.Characters;
 public class Goblin : Monster
 {
     public Goblin(Item? loot)
-        : base("Goblin", 20, 8, 3, 3, 50, loot)
+        : base("Goblin", 20, 8, 3, 50, 3, loot)
     {
 
     }
@@ -171,22 +286,35 @@ public class Monster : Character
     }
 
     public void ScaleStats(int level)
-{
-    Level = level;
-    
-    // Get the original base stats from the constructor
-    int baseHealth = MaxHealth;
-    int baseStrength = Stats["Strength"];
-    int baseDexterity = Stats["Dexterity"];
-    int baseIntellect = Stats["Intellect"];
+    {
+        Level = level;
 
-    // Apply the scaling formula
-    MaxHealth = baseHealth + (level * 5);
-    Health = MaxHealth;
-    Stats["Strength"] = baseStrength + (level * 2);
-    Stats["Dexterity"] = baseDexterity + (level * 1);
-    Stats["Intellect"] = baseIntellect + (level * 1);
+        // Get the original base stats from the constructor
+        int baseHealth = MaxHealth;
+        int baseStrength = Stats["Strength"];
+        int baseDexterity = Stats["Dexterity"];
+        int baseIntellect = Stats["Intellect"];
+
+        // Apply the scaling formula
+        MaxHealth = baseHealth + (level * 5);
+        Health = MaxHealth;
+        Stats["Strength"] = baseStrength + (level * 2);
+        Stats["Dexterity"] = baseDexterity + (level * 1);
+        Stats["Intellect"] = baseIntellect + (level * 1);
+    }
 }
+--- Characters/Ogre.cs ---
+using csharp_roguelike_rpg.Items;
+
+namespace csharp_roguelike_rpg.Characters;
+
+public class Ogre : Monster
+{
+    public Ogre(Item? loot)
+        : base("Ogre", 60, 14, 1, 15, 2, loot)
+    {
+
+    }
 }
 --- Characters/Orc.cs ---
 using csharp_roguelike_rpg.Items;
@@ -234,27 +362,34 @@ public class Player : Character
         {
             case PlayerClass.Warrior:
                 MaxHealth = 80;
+                MaxEnergy = 10;
                 Stats["Strength"] = 12;
                 Stats["Dexterity"] = 4;
                 Stats["Intellect"] = 3;
+                Stats["Lifesteal"] = 0;
                 Abilities.Add(new PowerAttack());
                 break;
             case PlayerClass.Rogue:
                 MaxHealth = 60;
+                MaxEnergy = 25;
                 Stats["Strength"] = 8;
                 Stats["Dexterity"] = 10;
                 Stats["Intellect"] = 5;
+                Stats["Lifesteal"] = 0;
                 Abilities.Add(new DoubleStrike());
                 break;
             case PlayerClass.Mage:
                 MaxHealth = 50;
+                MaxEnergy = 50;
                 Stats["Strength"] = 5;
                 Stats["Dexterity"] = 6;
                 Stats["Intellect"] = 12;
+                Stats["Lifesteal"] = 0;
                 Abilities.Add(new Fireball());
                 break;
         }
         Health = MaxHealth;
+        Energy = MaxEnergy;
         Class = playerClass;
     }
 
@@ -307,6 +442,7 @@ public class Player : Character
             int strengthIncrease = 0;
             int dexterityIncrease = 0;
             int intellectIncrease = 0;
+            int energyIncrease = 0;
 
             switch (Class)
             {
@@ -315,26 +451,31 @@ public class Player : Character
                     strengthIncrease = 3;
                     dexterityIncrease = 1;
                     intellectIncrease = 0;
+                    energyIncrease = 2;
                     break;
                 case PlayerClass.Rogue:
                     healthIncrease = 10;
                     strengthIncrease = 1;
                     dexterityIncrease = 3;
                     intellectIncrease = 1;
+                    energyIncrease = 3;
                     break;
                 case PlayerClass.Mage:
                     healthIncrease = 8;
                     strengthIncrease = 1;
                     dexterityIncrease = 1;
                     intellectIncrease = 3;
+                    energyIncrease = 5;
                     break;
             }
 
             MaxHealth += healthIncrease;
+            MaxEnergy += energyIncrease;
             Stats["Strength"] += strengthIncrease;
             Stats["Dexterity"] += dexterityIncrease;
             Stats["Intellect"] += intellectIncrease;
             Health = MaxHealth;
+            Energy = MaxEnergy;
             ExperienceToNextLevel = Level * 100;
         }
         return leveledUp;
@@ -413,6 +554,7 @@ public class Player : Character
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
 using csharp_roguelike_rpg.Systems;
+using csharp_roguelike_rpg.Abilities;
 
 public class GameData
 {
@@ -422,6 +564,7 @@ public class GameData
     public List<Monster> MasterBossTable { get; private set; }
     public List<CraftingRecipe> AvailableRecipes { get; private set; }
     public Dictionary<PlayerClass, Dictionary<int, List<Modifier>>> ClassTalents { get; private set; }
+    public List<Modifier> FountainBlessings { get; private set; }
 
     public GameData()
     {
@@ -431,16 +574,37 @@ public class GameData
         MasterBossTable = new List<Monster>();
         AvailableRecipes = new List<CraftingRecipe>();
         ClassTalents = new Dictionary<PlayerClass, Dictionary<int, List<Modifier>>>();
+        FountainBlessings = new List<Modifier>();
 
         // --- CRAFTED ITEMS AND MATERIALS ---
 
-        // Materials and Monster Drops
+        // Materials
         Item goblinHide = new Item("Goblin Hide", "Yuck! What did you do to loot this? leathery and tough but, extremely smelly!");
-        Item orcTusk = new Item("Orc Tusk", "A sharp, yellowed tusk. A brutal trophy.");
-        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "A wicked dagger crafted from a dragon's claw.", 15);
+        Item orcTusk = new Item("Orc Tusk", "surprisingly clean, this Orc flossed!");
+        Item boneChips = new Item("Bone Chips", "Probably not useful for soup.");
+        Item corrosiveOoze = new Item("Corrosive Ooze", "A vial of bubbling green goo. Don't drink it. Seriously.");
+        Item impHeart = new Item("Imp's Heart", "Still warm and faintly glowing. Probably useful in some forbidden recipe, or trash, your call.");
+        Item spiderSilk = new Item("Spider Silk", "Strong and sticky. Maybe could be woven into some light armor.");
 
         // Crafted Items
-        Item leatherArmor = new Item("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!");
+        Armor leatherArmor = new Armor("Leather Armor", "Simple armor made from goblin hide, you couldn't get the smell off, nasty!. Gves +2 Defense", 2);
+        Armor silkArmor = new Armor("Silk Armor", "How did you even weave this yourself? I guess 'cause magic!. Gives +3 Defense", 3);
+        Weapon boneSword = new Weapon("Bone Sword", "Looks flimsy, better than nothing, I guess. +2 Damage.", 2);
+        Weapon orcTuskSword = new Weapon("Orc Tusk Sword", "Now we are talking, something a little more damaging. +6 Damage.", 6);
+
+        // Weapon drops
+        Weapon ogreClub = new Weapon("Ogre's Club", "The only thing they know how to use well. +5 Damage.", 5);
+        Weapon dragonClaw = new Weapon("Dragon Claw Dagger", "Nothing says baddass like a DRAGON CLAW for a weapon. Deals 15 damage.", 15);
+        Weapon goblinSmasher = new Weapon("Goblin Smasher", "A crudely-named but surprisingly effective mace. Grants +7 Damage.", 7);
+        Weapon labyrinthAxe = new Weapon("Labyrinth Axe", "A massive, perfectly balanced axe that smells faintly of bull. Grants +20 Damage.", 20);
+
+        //Armor drops
+        Armor noblesRaiment = new Armor("Noble's Raiment", "Impeccably stylish and surprisingly protective. Grants +18 Defense.", 18);
+        Armor trollsHideArmor = new Armor("Troll-Hide Armor", "Thick, pungent, and still slightly regenerating. Grants +10 Defense.", 10);
+
+        //Relics
+        Relic lichsPhylactery = new Relic("Lich's Phylactery", "A glowing gem that pulses with stolen life force.", new StatModifier("Lifesteal", "Your attacks now heal you for a small amount.", Rarity.Epic, "Lifesteal", 2, "null", 0));
+        Relic heartOfTheInferno = new Relic("Heart of the Inferno", "The still-burning heart of a dragon. You feel its power.", new AbilityGrantModifier("Dragon's Breath", "Grants the powerful Fireball ability.", Rarity.Unique, new Fireball()));
 
         // --- SPECIAL ITEMS ---
         Item StairsDown = new Item("Stairs Down", "A staircase leading deeper into the darkness...");
@@ -461,10 +625,21 @@ public class GameData
         // --- MASTER MONSTER TABLE ---
         MasterMonsterTable.Add(new Goblin(goblinHide));
         MasterMonsterTable.Add(new Orc(orcTusk));
+        MasterMonsterTable.Add(new GiantSpider(spiderSilk));
+        MasterMonsterTable.Add(new AnimatedSkeleton(boneChips));
+        MasterMonsterTable.Add(new CorrosiveSlime(corrosiveOoze));
+        MasterMonsterTable.Add(new FireImp(impHeart));
+        MasterMonsterTable.Add(new Ogre(ogreClub));
 
 
         // --- MASTER BOSS TABLE ---
-        MasterBossTable.Add(new Boss(dragonClaw));
+        MasterBossTable.Add(new BossGoblinKing(goblinSmasher)); // Level 1 Boss
+        MasterBossTable.Add(new BossTrollChieftain(trollsHideArmor)); // Level 2 Boss
+        MasterBossTable.Add(new BossLichLord(lichsPhylactery)); // Level 3 Boss
+        MasterBossTable.Add(new BossMinotaurGuardian(labyrinthAxe)); // Level 4 Boss     
+        MasterBossTable.Add(new BossVampCount(noblesRaiment)); // Level 5 Boss
+        MasterBossTable.Add(new Boss(dragonClaw)); // Final Boss
+
 
         // --- CRAFTING TABLE ---
         CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>
@@ -472,6 +647,11 @@ public class GameData
             { goblinHide, 2 }
         });
         AvailableRecipes.Add(armorRecipe);
+
+        // --- FOUNTAIN BLESSINGS ---
+        FountainBlessings.Add(new StatModifier("Blessing of Strength", "You feel a surge of power! +2 Strength", Rarity.Heroic, "Strength", 2, "null", 0));
+        FountainBlessings.Add(new StatModifier("Blessing of Agility", "You feel lighter on your feet! +2 Dexterity", Rarity.Heroic, "Dexterity", 2, "null", 0));
+        FountainBlessings.Add(new StatModifier("Blessing of Intellect", "Your mind feels clearer! +2 Intellect", Rarity.Heroic, "Intellect", 2, "null", 0));
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
         // --- TALENTS ---
@@ -483,11 +663,24 @@ public class GameData
             // Level 3 Talents
             [3] = new List<Modifier>
         {
-            new StatModifier("Thick Hide", "Who needs brains when you have brawn? and you have neither. Permanently increases Max Health by 15.", Rarity.Uncommon, "MaxHealth", 15),
-            new StatModifier("Weapon Master", "You smash things harder now, woop!. Permanently increases Strength by 2.", Rarity.Uncommon, "Strength", 2),
-            new StatModifier("Adrenaline Rush", "You feel less pain now, big deal. Permanently increases Dexterity by 1.", Rarity.Common, "Dexterity", 1)
+            new StatModifier("Thick Hide", "Who needs brains when you have brawn? and you have neither. Permanently increases Max Health by 15.", Rarity.Uncommon, "MaxHealth", 15, "null",  0),
+            new StatModifier("Weapon Master", "You smash things harder now, woop!. Permanently increases Strength by 2.", Rarity.Uncommon, "Strength", 2, "null", 0),
+            new StatModifier("Adrenaline Rush", "You feel less pain now, big deal. Permanently increases Dexterity by 1.", Rarity.Common, "Dexterity", 1, "null", 0)
+        },
+            // Level 6 Talents
+            [6] = new List<Modifier>
+        {
+            new StatModifier("Juggernaut", "Moar brawn, but this time, less brains. Permanently increases Max Health by 20 and reduces Intellect by 5.", Rarity.Uncommon, "MaxHealth", 20, "Intellect", 5),
+            new StatModifier("Berserker", "Who needs full health when you can go faster?. Permanently increases Dexterity by 2.", Rarity.Uncommon, "Dexterity", 2, "null", 0),
+            new StatModifier("Mighty Blow", "ME BIG STRONG, HIT THINGS HARDER!. Permanently increases Strength by 3.", Rarity.Epic, "Strength", 3, "null", 0)
+        },
+            // Level 9 Talents
+            [9] = new List<Modifier>
+        {
+            new StatModifier("Unstoppable", "You just won't die, won't you?. Permanently increases Max Health by 25.", Rarity.Epic, "MaxHealth", 25, "null", 0),
+            new StatModifier("Whirlwind", "Fan goes hurr durr. Permanently increases Dexterity by 3.", Rarity.Epic, "Dexterity", 3, "null", 0),
+            new StatModifier("Colossal Strength", "ME DA STRONGEST, NOT THE INTELLIGENTEST. Permanently increases Strength by 10, Intellect reduced by 2.", Rarity.Legendary, "Strength", 4, "Intellect", 2)
         }
-            // TODO: Add extra tiers
         };
 
         // --- ROGUE TALENTS ---
@@ -496,10 +689,24 @@ public class GameData
             // Level 3 Talents
             [3] = new List<Modifier>
         {
-            new StatModifier("Fleet Footed", "I AM SPEED!. Permanently increases Dexterity by 2.", Rarity.Uncommon, "Dexterity", 2),
-            new StatModifier("Precise Strikes", "Your stab got stabbier!. Permanently increases Strength by 1.", Rarity.Common, "Strength", 1),
-            new StatModifier("Toughness", "You are not as feeble as you think. Permanently increases Max Health by 10.", Rarity.Common, "MaxHealth", 10)
-        }
+            new StatModifier("Fleet Footed", "I AM SPEED!. Permanently increases Dexterity by 2.", Rarity.Uncommon, "Dexterity", 2, "null", 0),
+            new StatModifier("Precise Strikes", "Your stab got stabbier!. Permanently increases Strength by 1.", Rarity.Common, "Strength", 1, "null", 0),
+            new StatModifier("Toughness", "You are not as feeble as I thought. Permanently increases Max Health by 10.", Rarity.Common, "MaxHealth", 10, "null", 0)
+        },
+            // Level 6 Talents
+            [6] = new List<Modifier>
+            {
+            new StatModifier("Evasion", "You can't C me!. Permanently increases Dexterity by 3.", Rarity.Uncommon, "Dexterity", 3, "null", 0),
+            new StatModifier("Killer Instinct", "Kill all the things!. Permanently increases Strength by 2.", Rarity.Uncommon, "Strength", 2, "null", 0),
+            new StatModifier("Iron Will", "Really, you are going for a tanky build? whatever!. Permanently increases Max Health by 15.", Rarity.Common, "MaxHealth", 15, "null", 0)
+            },
+            // Level 9 Talents
+            [9] = new List<Modifier>
+            {
+            new StatModifier("Shadowstep", "Sneaky stabby!. Permanently increases Dexterity by 4.", Rarity.Epic, "Dexterity", 4, "null", 0),
+            new StatModifier("Assassinate", "Kill kill kill. Permanently increases Strength by 3.", Rarity.Epic, "Strength", 3, "null", 0),
+            new StatModifier("Stone Skin", "Why do you even pick me?. Permanently increases Max Health by 20.", Rarity.Epic, "MaxHealth", 20, "null", 0)
+            }
         };
 
         // --- MAGE TALENTS ---
@@ -508,9 +715,23 @@ public class GameData
             // Level 3 Talents for Mage
             [3] = new List<Modifier>
         {
-            new StatModifier("Arcane Intellect", "You are smarter than a fifth grader!. Permanently increases Intellect by 3.", Rarity.Uncommon, "Intellect", 3),
-            new StatModifier("Glass Cannon", "Do I really need to explain this?. +2 Intellect, -5 Max Health.", Rarity.Epic, "Intellect", 2), // TODO: update StatModifier to handle negative values on other stats
-            new StatModifier("Stamina", "Basic white mage buff. Permanently increases Max Health by 12.", Rarity.Common, "MaxHealth", 12)
+            new StatModifier("Arcane Intellect", "You are smarter than a fifth grader!. Permanently increases Intellect by 3.", Rarity.Uncommon, "Intellect", 3, "null", 0),
+            new StatModifier("Glass Cannon", "Do I really need to explain this?. +5 Intellect, -5 Max Health.", Rarity.Epic, "Intellect", 5, "MaxHealth", 5),
+            new StatModifier("Stamina", "Basic white mage buff. Permanently increases Max Health by 12.", Rarity.Common, "MaxHealth", 12, "null", 0)
+        },
+            // Level 6 Talents for Mage
+            [6] = new List<Modifier>
+        {
+            new StatModifier("Elemental Mastery", "You are even smarter than a fifth grader!. Permanently increases Intellect by 5.", Rarity.Epic, "Intellect", 5, "null", 0),
+            new StatModifier("Mana Fountain", "You can cast more fireballs, how original!. Permanently increases Max Energy by 20.", Rarity.Uncommon, "MaxEnergy", 20, "null", 0),
+            new StatModifier("Quick Thinking", "You are quick as a magical fox. Permanently increases Dexterity by 2.", Rarity.Uncommon, "Dexterity", 2, "null", 0)
+        },
+            // Level 9 Talents for Mage
+            [9] = new List<Modifier>
+        {
+            new StatModifier("Archmage", "You are the smartest fifth grader ever!. Permanently increases Intellect by 5.", Rarity.Legendary, "Intellect", 5, "null", 0),
+            new StatModifier("Manaforged", "Your magical reserves are unlimited!, not really. Permanently increases Max Energy by 25.", Rarity.Epic, "MaxEnergy", 25, "null", 0),
+            new StatModifier("Glassier Cannon", "all brains and no brawn. Permanently increases Intellect by 10, decreases health by 10.", Rarity.Epic, "Intellect", 10, "MaxHealth", 10)
         }
         };
     }
@@ -647,8 +868,19 @@ public class AbilityGrantModifier : Modifier
     {
         player.Abilities.Add(_abilityToGrant);
         UIManager.SlowPrint($"You have learned a new ability: {_abilityToGrant.Name}!", ConsoleColor.Magenta);
-         UIManager.SlowPrint($"{_abilityToGrant.Description}", ConsoleColor.Magenta);
+        UIManager.SlowPrint($"{_abilityToGrant.Description}", ConsoleColor.Magenta);
     }
+}
+--- Systems/CombatResult.cs ---
+namespace csharp_roguelike_rpg.Systems;
+
+public enum CombatResult
+{
+    InProgress,
+    PlayerVictory,
+    PlayerDefeat,
+    PlayerVictoryAndGameWon,
+    PlayerFled // Backlog implementation
 }
 --- Systems/EquipmentSlot.cs ---
 namespace csharp_roguelike_rpg.Systems;
@@ -660,6 +892,7 @@ public enum EquipmentSlot
 --- Systems/Game.cs ---
 namespace csharp_roguelike_rpg.Systems;
 
+using System.Net.Quic;
 using csharp_roguelike_rpg.Abilities;
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
@@ -672,11 +905,13 @@ public class Game
     private DungeonGenerator _generator;
     private GameData _gameData;
     private int _currentFloor;
+    private Random _random;
 
     public Game()
     {
         _gameData = new GameData();
         _generator = new DungeonGenerator(_gameData);
+        _random = new Random();
     }
 
     private void SetupNewGame()
@@ -729,6 +964,24 @@ public class Game
         _player.VisitedRooms.Add(startingRoom);
     }
 
+    private void SetupNextFloor()
+    {
+        _currentFloor++;
+        UIManager.SlowPrint($"You descend to floor {_currentFloor}...", ConsoleColor.Magenta);
+
+        // Re-generate the world for the new floor
+        Room startingRoom = _generator.Generate(10, _currentFloor);
+        _player.CurrentRoom = startingRoom;
+        _player.VisitedRooms.Clear(); // Clear the map for the new floor
+        _player.VisitedRooms.Add(startingRoom);
+    }
+
+    private void HandlePlayerDeath()
+    {
+        UIManager.SlowPrint("\nYou have fallen in the dark...", ConsoleColor.Red);
+        UIManager.SlowPrint("Your adventure ends here.", ConsoleColor.Red);
+    }
+
 
     private bool GameLoop()
     {
@@ -756,25 +1009,25 @@ public class Game
                 case "west":
                     if (_player.CurrentRoom != null)
                     {
-                        bool playerIsAlive = true;
+                        CombatResult combatResult = CombatResult.PlayerVictory;
                         switch (verb)
                         {
                             case "north":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.North);
+                                combatResult = MovePlayer(_player.CurrentRoom.North);
                                 break;
                             case "south":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.South);
+                                combatResult = MovePlayer(_player.CurrentRoom.South);
                                 break;
                             case "east":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.East);
+                                combatResult = MovePlayer(_player.CurrentRoom.East);
                                 break;
                             case "west":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.West);
+                                combatResult = MovePlayer(_player.CurrentRoom.West);
                                 break;
                         }
-                        if (!playerIsAlive)
+                        if (combatResult == CombatResult.PlayerDefeat || combatResult == CombatResult.PlayerVictoryAndGameWon)
                         {
-                            return false;
+                            return false; // Exit GameLoop if player died or won
                         }
                     }
                     break;
@@ -792,11 +1045,17 @@ public class Game
                     Console.WriteLine($" Level: {_player.Level}");
                     Console.WriteLine($" Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
                     Console.WriteLine($" Health: {_player.Health} / {_player.MaxHealth}");
+                    Console.WriteLine($" Energy: {_player.Energy} / {_player.MaxEnergy}");
                     Console.WriteLine("-----------------------");
                     Console.WriteLine(" Attributes:");
                     foreach (var stat in _player.Stats)
                     {
                         Console.WriteLine($" - {stat.Key}: {stat.Value}");
+                    }
+                    Console.WriteLine(" Abilities:");
+                    foreach (var ability in _player.Abilities)
+                    {
+                        Console.WriteLine($" - {ability.Name}(Cost: {ability.EnergyCost}): {ability.Description}");
                     }
                     Console.WriteLine("-----------------------");
                     break;
@@ -1077,6 +1336,49 @@ public class Game
                         UIManager.SlowPrint("There is nowhere to descend to here.");
                     }
                     break;
+                case "drink":
+                    // Check if the player is in a Fountain Room
+                    if (_player.CurrentRoom?.Name != "Fountain Room")
+                    {
+                        UIManager.SlowPrint("There is nothing to drink here.");
+                        break;
+                    }
+                    // Get two random blessings from the Blessings table
+                    var blessings = _gameData.FountainBlessings.OrderBy(x => _random.Next()).Take(2).ToList();
+
+                    UIManager.SlowPrint("You approach the glowing fountain. What do you do?", ConsoleColor.Cyan);
+                    Console.WriteLine($"1. {blessings[0].Description}");
+                    Console.WriteLine($"2. {blessings[1].Description}");
+                    Console.WriteLine("3. Drink deeply to restore your health.");
+
+                    // Process player choices and apply appropriate blessing or full heal
+                    while (true)
+                    {
+                        Console.Write("> ");
+                        string? input = Console.ReadLine();
+                        if (input == "1")
+                        {
+                            blessings[0].Apply(_player);
+                            break;
+                        }
+                        if (input == "2")
+                        {
+                            blessings[1].Apply(_player);
+                            break;
+                        }
+                        if (input == "3")
+                        {
+                            _player.Health = _player.MaxHealth;
+                            UIManager.SlowPrint("The water invigorates you, restoring your health to full!", ConsoleColor.Green);
+                            break;
+                        }
+                        Console.WriteLine("Invalid choice.");
+                    }
+
+                    // Fountain is meant to be used once, make inert after use
+                    _player.CurrentRoom.Name = "Inert Fountain Room";
+                    _player.CurrentRoom.Description = "The fountain's glow has faded, its magic spent.";
+                    break;
                 case "quit":
                     UIManager.SlowPrint("You decide to rest for now. Until next time!");
                     return false;
@@ -1089,42 +1391,43 @@ public class Game
     }
     public void Run()
     {
+        // The master "Play Again?" loop
         while (true)
         {
-            SetupNewGame();
+            SetupNewGame(); // Creates a new character on floor 1
 
-            while (true) // Master "Play Again?" loop
+            // The "Dungeon Floor" loop for a single run
+            bool playerIsAlive = true;
+            while (playerIsAlive)
             {
                 DescribeRoom();
-                bool descend = GameLoop(); // True if player descends, false if they quit
+                bool shouldDescend = GameLoop();
 
-                if (descend)
+                if (shouldDescend) // Player wants to descend
                 {
                     _currentFloor++;
-                    UIManager.SlowPrint($"You descend to floor {_currentFloor}...", ConsoleColor.Magenta);
-
-                    // Re-generate the world for the new floor
-                    Room startingRoom = _generator.Generate(10, _currentFloor);
-                    _player.CurrentRoom = startingRoom;
-                    _player.VisitedRooms.Clear(); // Clear the map for the new floor
-                    _player.VisitedRooms.Add(startingRoom);
+                    SetupNextFloor();
                 }
-                else
+                else // Player quit, died, or won the game
                 {
-                    // If they didn't descend (i.e., they quit), break the inner floor loop
-                    break;
+                    playerIsAlive = false; // Exit the floor loop
+                }
+
+                // --- AFTER RUN IS OVER ---
+                if (_player.Health <= 0)
+                {
+                    HandlePlayerDeath();
+                }
+
+                UIManager.SlowPrint("\nPlay Again? (y/n)");
+                string? playAgain = Console.ReadLine();
+                if (playAgain?.ToLower() != "y")
+                {
+                    break; // Exit the master "Play Again?" loop
                 }
             }
-
-            // This is only reached if the inner loop was broken (by quitting or dying)
-            UIManager.SlowPrint("\nPlay Again? (y/n)");
-            string? playAgain = Console.ReadLine();
-            if (playAgain?.ToLower() != "y")
-            {
-                break; // Exit the master "Play Again?" loop
-            }
+            UIManager.SlowPrint("Thanks for playing!");
         }
-        UIManager.SlowPrint("Thanks for playing!");
     }
 
     //----------------------------------------------------------------------------------------------------------
@@ -1132,7 +1435,7 @@ public class Game
 
     // --- HELPER METHODS ---
 
-    private bool StartCombat(Monster monsterToFight)
+    private CombatResult StartCombat(Monster monsterToFight)
     {
         Random random = new Random();
 
@@ -1156,7 +1459,10 @@ public class Game
             // Display Status
             Console.WriteLine("\n--------------------");
             Console.WriteLine($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
+            Console.WriteLine($"Energy {_player.Energy}/{_player.MaxEnergy}");
+            Console.WriteLine(" ");
             Console.WriteLine($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
+            Console.WriteLine($"Energy: {monsterToFight.Energy}/{monsterToFight.MaxEnergy}");
             Console.WriteLine("\n--------------------");
 
             Console.WriteLine($"\n--- ROUND {round} ---");
@@ -1170,12 +1476,17 @@ public class Game
 
                 if (character is Player)
                 {
+                    _player.Energy += 5;
+                    if (_player.Energy == _player.MaxEnergy)
+                    {
+                        _player.Energy = _player.MaxEnergy;
+                    }
                     UIManager.SlowPrint("Your turn! Choose an action");
                     Console.WriteLine("- attack");
                     Console.WriteLine("- defend");
                     foreach (var ability in _player.Abilities)
                     {
-                        Console.WriteLine($"- {ability.Name?.ToLower()}");
+                        Console.WriteLine($"- {ability.Name?.ToLower()} (Cost: {ability.EnergyCost})");
                     }
                     Console.Write("> ");
                     string? playerChoice = Console.ReadLine();
@@ -1199,6 +1510,18 @@ public class Game
                             int damageDealt = _player.GetTotalStrength();
                             monsterToFight.Health -= damageDealt;
                             UIManager.SlowPrint($"You attack the {monsterToFight.Name}, dealing {damageDealt} damage!", ConsoleColor.Cyan);
+
+                            // Apply lifesteal if applicable
+                            if (_player.Stats["Lifesteal"] > 0)
+                            {
+                                int lifestealAmount = _player.Stats["Lifesteal"] * damageDealt / 100;
+                                _player.Health += lifestealAmount;
+                                if (_player.Health > _player.MaxHealth)
+                                {
+                                    _player.Health = _player.MaxHealth; // Cap health at max health
+                                }
+                                UIManager.SlowPrint($"You steal {lifestealAmount} health from the {monsterToFight.Name}!", ConsoleColor.Green);
+                            }
                         }
                         else
                         {
@@ -1215,14 +1538,30 @@ public class Game
                         Ability? chosenAbility = _player.Abilities.Find(a => a.Name?.Equals(playerChoice, StringComparison.OrdinalIgnoreCase) ?? false);
                         if (chosenAbility != null)
                         {
-                            chosenAbility.Use(_player, monsterToFight);
+                            if (_player.Energy >= chosenAbility.EnergyCost)
+                            {
+                                chosenAbility.Use(_player, monsterToFight);
+                                _player.Energy -= chosenAbility.EnergyCost;
+                            }
+                            else
+                            {
+                                UIManager.SlowPrint("Fool, you do not have anough energy, can't you read?");
+                            }
                         }
                         else
                         {
                             UIManager.SlowPrint("Invalid command! You hesitate and lose your turn.");
                         }
                     }
+                    Console.WriteLine("\n--------------------");
+                    Console.WriteLine($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
+                    Console.WriteLine($"Energy {_player.Energy}/{_player.MaxEnergy}");
+                    Console.WriteLine(" ");
+                    Console.WriteLine($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
+                    Console.WriteLine($"Energy: {monsterToFight.Energy}/{monsterToFight.MaxEnergy}");
+                    Console.WriteLine("\n--------------------");
                 }
+
                 else if (character is Monster actingMonster)
                 {
                     // --- NEW TO-HIT LOGIC FOR MONSTER ---
@@ -1248,7 +1587,7 @@ public class Game
                         }
 
                         _player.Health -= damageToPlayer;
-                        UIManager.SlowPrint($"The {actingMonster.Name} retaliates, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
+                        UIManager.SlowPrint($"The {actingMonster.Name} attacks, dealing {damageToPlayer} damage to you!", ConsoleColor.Red);
                     }
                     else
                     {
@@ -1257,6 +1596,12 @@ public class Game
                     }
                 }
                 round++;
+                UIManager.SlowPrint($"\n---------END OF ROUND {round}-----------");
+                UIManager.SlowPrint($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
+                UIManager.SlowPrint($"Energy: {_player.Energy}/{_player.MaxEnergy}");
+                UIManager.SlowPrint($"{monsterToFight.Name}: {monsterToFight.Health}/{monsterToFight.MaxHealth}");
+                UIManager.SlowPrint($"Energy: {monsterToFight.Energy}/{monsterToFight.MaxEnergy}");
+                UIManager.SlowPrint("\n----------------------------------");
             }
         }
 
@@ -1267,13 +1612,23 @@ public class Game
         {
             UIManager.SlowPrint($"You defeated the {monsterToFight.Name}!");
 
-            // If Monster is a boss, spawn the stairs
-            if (monsterToFight is Boss && _player.CurrentRoom != null)
+            if (monsterToFight is Boss)
             {
-                if (_gameData.StairsDown != null)
+                // Check if this is the FINAL floor
+                if (_currentFloor == 5)
                 {
-                    UIManager.SlowPrint("A staircase reveals itself in the back of the room!", ConsoleColor.Yellow);
-                    _player.CurrentRoom.ItemsInRoom.Add(_gameData.StairsDown);
+                    UIManager.SlowPrint("You have defeated the final boss!", ConsoleColor.Yellow);
+                    UIManager.SlowPrint("The dungeon crumbles... you are victorious!", ConsoleColor.Yellow);
+                    UIManager.SlowPrint("For now...", ConsoleColor.Red);
+                    return CombatResult.PlayerVictoryAndGameWon; // Send the "Game Won" signal
+                }
+                else // It's a regular floor boss, spawn the stairs
+                {
+                    if (_player.CurrentRoom != null && _gameData.StairsDown != null)
+                    {
+                        UIManager.SlowPrint("A staircase reveals itself!", ConsoleColor.Yellow);
+                        _player.CurrentRoom.ItemsInRoom.Add(_gameData.StairsDown);
+                    }
                 }
             }
             if (monsterToFight.Loot != null)
@@ -1289,11 +1644,11 @@ public class Game
                 UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
                 HandleTalentSelection();
             }
-            return true;
+            return CombatResult.PlayerVictory;
         }
         else
         {
-            return false;
+            return CombatResult.PlayerDefeat;
         }
     }
 
@@ -1330,29 +1685,50 @@ public class Game
         }
     }
 
-    private bool MovePlayer(Room? newRoom)
+    private CombatResult MovePlayer(Room? newRoom)
     {
         if (newRoom != null)
         {
-            // Move Player
+            // Check for boss room and confirm
+            if (newRoom.Name == "Boss Chamber")
+            {
+                UIManager.SlowPrint("You sense a foul stench coming from the other side of this door...", ConsoleColor.Red);
+                UIManager.SlowPrint("There is a boss on the other side", ConsoleColor.Red);
+                UIManager.SlowPrint("Do you want to proceed?", ConsoleColor.Red);
+                Console.Write("(y/n)> ");
+                string? input = Console.ReadLine();
+                if (input?.ToLower() != "y")
+                {
+                    UIManager.SlowPrint("You decide to stay back and prepare yourself...", ConsoleColor.Yellow);
+                    return CombatResult.InProgress;
+                }
+                else
+                {
+                    UIManager.SlowPrint("You bravely step into the chamber...", ConsoleColor.Yellow);
+                }
+            }
+
+            // Move the player to the new room
             _player.CurrentRoom = newRoom;
             _player.VisitedRooms.Add(newRoom);
             DescribeRoom();
 
             // Trigger combat if it is a monster room
             while (_player.CurrentRoom != null &&
-                    _player.CurrentRoom.MonstersInRoom.Count > 0 &&
-                    _player.Health > 0)
+               _player.CurrentRoom.MonstersInRoom.Count > 0 &&
+               _player.Health > 0)
             {
                 Monster monster = _player.CurrentRoom.MonstersInRoom[0];
-                bool playerWon = StartCombat(monster);
-                if (playerWon)
+                CombatResult combatResult = StartCombat(monster);
+
+                if (combatResult == CombatResult.PlayerVictory)
                 {
                     _player.CurrentRoom.MonstersInRoom.Remove(monster);
                 }
                 else
                 {
-                    return false;
+                    // If player was defeated OR won the whole game, signal back
+                    return combatResult;
                 }
             }
         }
@@ -1360,7 +1736,7 @@ public class Game
         {
             Console.WriteLine("You can't go that way.");
         }
-        return true;
+        return CombatResult.PlayerVictory;
     }
 
     private void DrawMap()
@@ -1395,7 +1771,22 @@ public class Game
                 // Check if a visited room exists at the current coordinate.
                 else if (_player.VisitedRooms.Any(r => r.X == x && r.Y == y))
                 {
-                    line += "[#]"; // Visited room
+                    if (_player.VisitedRooms.First(r => r.X == x && r.Y == y).MonstersInRoom.Any())
+                    {
+                        line += "[M]"; // Room with monsters
+                    }
+                    else if (_player.VisitedRooms.First(r => r.X == x && r.Y == y).ItemsInRoom.Any())
+                    {
+                        line += "[T]"; // Room with items
+                    }
+                    else if (_player.VisitedRooms.First(r => r.X == x && r.Y == y).Name == "Boss Chamber")
+                    {
+                        line += "[B]"; // Boss room
+                    }
+                    else
+                    {
+                        line += "[#]"; // Visited room
+                    }
                 }
                 else
                 {
@@ -1405,6 +1796,7 @@ public class Game
             Console.WriteLine(line);
         }
         Console.WriteLine("-------------------");
+        Console.WriteLine("Legend: P=Player, M=Monsters, T=Treasure, B=Boss");
     }
 
     private void HandleTalentSelection()
@@ -1481,29 +1873,51 @@ public enum Rarity
 }
 --- Systems/StatModifier.cs ---
 namespace csharp_roguelike_rpg.Systems;
+
+using System.Net;
 using csharp_roguelike_rpg.Characters;
 
 public class StatModifier : Modifier
 {
     private readonly string _statToModify;
     private readonly int _amount;
+    private readonly string _statToPenalize;
+    private readonly int _penalty;
 
-    public StatModifier(string name, string description, Rarity rarity, string statToModify, int amount)
+    public StatModifier(string name, string description, Rarity rarity, string statToModify, int amount, string statToPenalize, int penalty)
     {
         Name = name;
         Description = description;
         Rarity = rarity;
         _statToModify = statToModify;
         _amount = amount;
+        _statToPenalize = statToPenalize;
+        _penalty = penalty;
     }
 
     public override void Apply(Player player)
     {
-        if (player.Stats.ContainsKey(_statToModify))
+        if (player.Stats.ContainsKey(_statToPenalize))
+        {
+            if (_statToPenalize == "null")
+            {
+                player.Stats[_statToModify] += _amount;
+                UIManager.SlowPrint($"Your {_statToModify} has permanently increased by {_amount}!", ConsoleColor.Green);
+            }
+            else if (_statToPenalize != "null")
+            {
+                player.Stats[_statToModify] += _amount;
+                player.Stats[_statToPenalize] -= _penalty;
+                UIManager.SlowPrint($"Your {_statToModify} has permanently increased by {_amount}!", ConsoleColor.Green);
+                UIManager.SlowPrint($"Your {_statToPenalize} has permanently decreased by {_amount}!", ConsoleColor.Red);
+            }
+
+        }
+        else
         {
             player.Stats[_statToModify] += _amount;
             UIManager.SlowPrint($"Your {_statToModify} has permanently increased by {_amount}!", ConsoleColor.Green);
-        }   
+        }
     }
 }
 --- Systems/UIManager.cs ---
@@ -1530,6 +1944,7 @@ public static class UIManager
 --- World/DungeonGenerator.cs ---
 using csharp_roguelike_rpg.Characters;
 using csharp_roguelike_rpg.Items;
+using csharp_roguelike_rpg.Systems;
 namespace csharp_roguelike_rpg.World;
 
 public class DungeonGenerator
@@ -1581,9 +1996,8 @@ public class DungeonGenerator
                 if (i == numberOfRooms - 2)
                 {
                     // --- SPAWN THE BOSS ---
-                    Monster bossTemplate = _gameData.MasterBossTable[0];
-                    Monster bossForRoom = bossTemplate.Clone(); // Clone the template
-                    bossForRoom.ScaleStats(floorLevel);         // Scale the clone
+                    Monster bossTemplate = _gameData.MasterBossTable[floorLevel - 1]; // Select boss based on floor level
+                    Monster bossForRoom = bossTemplate.Clone();         // Scale the clone
                     nextRoom.MonstersInRoom.Add(bossForRoom);
 
                     nextRoom.Name = "Boss Chamber";
@@ -1602,12 +2016,20 @@ public class DungeonGenerator
                 }
                 else
                 {
-                    int randomIndex = _random.Next(_gameData.MasterLootTable.Count);
-                    Item lootItem = _gameData.MasterLootTable[randomIndex];
-                    nextRoom.ItemsInRoom.Add(lootItem);
+                    if (_random.Next(100) < 10)
+                    {
+                        nextRoom.Name = "Fountain Room";
+                        nextRoom.Description = "A faint blue light emanates from the center of the room, where a small fountain gurgles with glowing water. It seems safe to drink.";
+                    }
+                    else
+                    {
+                        int randomIndex = _random.Next(_gameData.MasterLootTable.Count);
+                        Item lootItem = _gameData.MasterLootTable[randomIndex];
+                        nextRoom.ItemsInRoom.Add(lootItem);
 
-                    nextRoom.Name = "Treasure Room";
-                    nextRoom.Description = $"You feel a sense of calm here, a brief respite from the darkness.";
+                        nextRoom.Name = "Treasure Room";
+                        nextRoom.Description = $"You feel a sense of calm here, a brief respite from the darkness.";
+                    }
                 }
 
                 // Link the new room to the current room
