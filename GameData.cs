@@ -11,6 +11,7 @@ public class GameData
     public List<Monster> MasterBossTable { get; private set; }
     public List<CraftingRecipe> AvailableRecipes { get; private set; }
     public Dictionary<PlayerClass, Dictionary<int, List<Modifier>>> ClassTalents { get; private set; }
+    public List<Modifier> FountainBlessings { get; private set; }
 
     public GameData()
     {
@@ -20,6 +21,7 @@ public class GameData
         MasterBossTable = new List<Monster>();
         AvailableRecipes = new List<CraftingRecipe>();
         ClassTalents = new Dictionary<PlayerClass, Dictionary<int, List<Modifier>>>();
+        FountainBlessings = new List<Modifier>();
 
         // --- CRAFTED ITEMS AND MATERIALS ---
 
@@ -92,6 +94,11 @@ public class GameData
             { goblinHide, 2 }
         });
         AvailableRecipes.Add(armorRecipe);
+
+        // --- FOUNTAIN BLESSINGS ---
+        FountainBlessings.Add(new StatModifier("Blessing of Strength", "You feel a surge of power! +2 Strength", Rarity.Heroic, "Strength", 2, "null", 0));
+        FountainBlessings.Add(new StatModifier("Blessing of Agility", "You feel lighter on your feet! +2 Dexterity", Rarity.Heroic, "Dexterity", 2, "null", 0));
+        FountainBlessings.Add(new StatModifier("Blessing of Intellect", "Your mind feels clearer! +2 Intellect", Rarity.Heroic, "Intellect", 2, "null", 0));
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
         // --- TALENTS ---

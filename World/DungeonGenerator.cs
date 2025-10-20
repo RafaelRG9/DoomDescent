@@ -72,12 +72,20 @@ public class DungeonGenerator
                 }
                 else
                 {
-                    int randomIndex = _random.Next(_gameData.MasterLootTable.Count);
-                    Item lootItem = _gameData.MasterLootTable[randomIndex];
-                    nextRoom.ItemsInRoom.Add(lootItem);
+                    if (_random.Next(100) < 10)
+                    {
+                        nextRoom.Name = "Fountain Room";
+                        nextRoom.Description = "A faint blue light emanates from the center of the room, where a small fountain gurgles with glowing water. It seems safe to drink.";
+                    }
+                    else
+                    {
+                        int randomIndex = _random.Next(_gameData.MasterLootTable.Count);
+                        Item lootItem = _gameData.MasterLootTable[randomIndex];
+                        nextRoom.ItemsInRoom.Add(lootItem);
 
-                    nextRoom.Name = "Treasure Room";
-                    nextRoom.Description = $"You feel a sense of calm here, a brief respite from the darkness.";
+                        nextRoom.Name = "Treasure Room";
+                        nextRoom.Description = $"You feel a sense of calm here, a brief respite from the darkness.";
+                    }
                 }
 
                 // Link the new room to the current room

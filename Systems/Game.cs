@@ -13,11 +13,13 @@ public class Game
     private DungeonGenerator _generator;
     private GameData _gameData;
     private int _currentFloor;
+    private Random _random;
 
     public Game()
     {
         _gameData = new GameData();
         _generator = new DungeonGenerator(_gameData);
+        _random = new Random();
     }
 
     private void SetupNewGame()
@@ -115,25 +117,25 @@ public class Game
                 case "west":
                     if (_player.CurrentRoom != null)
                     {
-                        bool playerIsAlive = true;
+                        CombatResult combatResult = CombatResult.PlayerVictory;
                         switch (verb)
                         {
                             case "north":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.North);
+                                combatResult = MovePlayer(_player.CurrentRoom.North);
                                 break;
                             case "south":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.South);
+                                combatResult = MovePlayer(_player.CurrentRoom.South);
                                 break;
                             case "east":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.East);
+                                combatResult = MovePlayer(_player.CurrentRoom.East);
                                 break;
                             case "west":
-                                playerIsAlive = MovePlayer(_player.CurrentRoom.West);
+                                combatResult = MovePlayer(_player.CurrentRoom.West);
                                 break;
                         }
-                        if (!playerIsAlive)
+                        if (combatResult == CombatResult.PlayerDefeat || combatResult == CombatResult.PlayerVictoryAndGameWon)
                         {
-                            return false;
+                            return false; // Exit GameLoop if player died or won
                         }
                     }
                     break;
@@ -442,6 +444,49 @@ public class Game
                         UIManager.SlowPrint("There is nowhere to descend to here.");
                     }
                     break;
+                case "drink":
+                    // Check if the player is in a Fountain Room
+                    if (_player.CurrentRoom?.Name != "Fountain Room")
+                    {
+                        UIManager.SlowPrint("There is nothing to drink here.");
+                        break;
+                    }
+                    // Get two random blessings from the Blessings table
+                    var blessings = _gameData.FountainBlessings.OrderBy(x => _random.Next()).Take(2).ToList();
+
+                    UIManager.SlowPrint("You approach the glowing fountain. What do you do?", ConsoleColor.Cyan);
+                    Console.WriteLine($"1. {blessings[0].Description}");
+                    Console.WriteLine($"2. {blessings[1].Description}");
+                    Console.WriteLine("3. Drink deeply to restore your health.");
+
+                    // Process player choices and apply appropriate blessing or full heal
+                    while (true)
+                    {
+                        Console.Write("> ");
+                        string? input = Console.ReadLine();
+                        if (input == "1")
+                        {
+                            blessings[0].Apply(_player);
+                            break;
+                        }
+                        if (input == "2")
+                        {
+                            blessings[1].Apply(_player);
+                            break;
+                        }
+                        if (input == "3")
+                        {
+                            _player.Health = _player.MaxHealth;
+                            UIManager.SlowPrint("The water invigorates you, restoring your health to full!", ConsoleColor.Green);
+                            break;
+                        }
+                        Console.WriteLine("Invalid choice.");
+                    }
+
+                    // Fountain is meant to be used once, make inert after use
+                    _player.CurrentRoom.Name = "Inert Fountain Room";
+                    _player.CurrentRoom.Description = "The fountain's glow has faded, its magic spent.";
+                    break;
                 case "quit":
                     UIManager.SlowPrint("You decide to rest for now. Until next time!");
                     return false;
@@ -466,36 +511,31 @@ public class Game
                 DescribeRoom();
                 bool shouldDescend = GameLoop();
 
-                if (_player.Health <= 0)
+                if (shouldDescend) // Player wants to descend
                 {
-                    playerIsAlive = false; // Player died, exit the floor loop
-                }
-                else if (shouldDescend)
-                {
-                    // Player is descending to the next floor
                     _currentFloor++;
                     SetupNextFloor();
                 }
-                else // Player chose to quit
+                else // Player quit, died, or won the game
                 {
                     playerIsAlive = false; // Exit the floor loop
                 }
-            }
 
-            // This code is reached when the floor loop ends (player died or quit)
-            if (_player.Health <= 0)
-            {
-                HandlePlayerDeath();
-            }
+                // --- AFTER RUN IS OVER ---
+                if (_player.Health <= 0)
+                {
+                    HandlePlayerDeath();
+                }
 
-            UIManager.SlowPrint("\nPlay Again? (y/n)");
-            string? playAgain = Console.ReadLine();
-            if (playAgain?.ToLower() != "y")
-            {
-                break; // Exit the master "Play Again?" loop
+                UIManager.SlowPrint("\nPlay Again? (y/n)");
+                string? playAgain = Console.ReadLine();
+                if (playAgain?.ToLower() != "y")
+                {
+                    break; // Exit the master "Play Again?" loop
+                }
             }
+            UIManager.SlowPrint("Thanks for playing!");
         }
-        UIManager.SlowPrint("Thanks for playing!");
     }
 
     //----------------------------------------------------------------------------------------------------------
@@ -503,7 +543,7 @@ public class Game
 
     // --- HELPER METHODS ---
 
-    private bool StartCombat(Monster monsterToFight)
+    private CombatResult StartCombat(Monster monsterToFight)
     {
         Random random = new Random();
 
@@ -682,31 +722,20 @@ public class Game
 
             if (monsterToFight is Boss)
             {
-                UIManager.SlowPrint("You have defeated a boss! You feel a strange energy in the air...", ConsoleColor.Yellow);
-                UIManager.SlowPrint("You have reached the end of my dungeon, I am impressed!", ConsoleColor.Yellow);
-                // End game or offer to continue
-                UIManager.SlowPrint("But this is just the beginning of your journey...", ConsoleColor.Yellow);
-                UIManager.SlowPrint("Prepare yourself for even greater challenges ahead!", ConsoleColor.Yellow);
-                return false;
-
-            }
-            // If Monster is a boss, spawn the stairs
-            if (_gameData.MasterBossTable.Contains(monsterToFight) && _player.CurrentRoom != null)
-            {
-                if (_gameData.StairsDown != null)
+                // Check if this is the FINAL floor
+                if (_currentFloor == 5)
                 {
-                    UIManager.SlowPrint("A staircase reveals itself in the back of the room!", ConsoleColor.Yellow);
-                    _player.CurrentRoom.ItemsInRoom.Add(_gameData.StairsDown);
-                    UIManager.SlowPrint("Ready for the next floor?", ConsoleColor.Yellow);
-                    Console.Write("(y/n)> ");
-                    if (Console.ReadLine()?.ToLower() == "y")
+                    UIManager.SlowPrint("You have defeated the final boss!", ConsoleColor.Yellow);
+                    UIManager.SlowPrint("The dungeon crumbles... you are victorious!", ConsoleColor.Yellow);
+                    UIManager.SlowPrint("For now...", ConsoleColor.Red);
+                    return CombatResult.PlayerVictoryAndGameWon; // Send the "Game Won" signal
+                }
+                else // It's a regular floor boss, spawn the stairs
+                {
+                    if (_player.CurrentRoom != null && _gameData.StairsDown != null)
                     {
-                        UIManager.SlowPrint("Fool, this was just the beginning...", ConsoleColor.Magenta);
-                        SetupNextFloor();// End the game loop and descend
-                    }
-                    else
-                    {
-                        UIManager.SlowPrint("Want to explore more rooms? smart!", ConsoleColor.Yellow);
+                        UIManager.SlowPrint("A staircase reveals itself!", ConsoleColor.Yellow);
+                        _player.CurrentRoom.ItemsInRoom.Add(_gameData.StairsDown);
                     }
                 }
             }
@@ -723,11 +752,11 @@ public class Game
                 UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
                 HandleTalentSelection();
             }
-            return true;
+            return CombatResult.PlayerVictory;
         }
         else
         {
-            return false;
+            return CombatResult.PlayerDefeat;
         }
     }
 
@@ -764,7 +793,7 @@ public class Game
         }
     }
 
-    private bool MovePlayer(Room? newRoom)
+    private CombatResult MovePlayer(Room? newRoom)
     {
         if (newRoom != null)
         {
@@ -779,7 +808,7 @@ public class Game
                 if (input?.ToLower() != "y")
                 {
                     UIManager.SlowPrint("You decide to stay back and prepare yourself...", ConsoleColor.Yellow);
-                    return true;
+                    return CombatResult.InProgress;
                 }
                 else
                 {
@@ -794,18 +823,20 @@ public class Game
 
             // Trigger combat if it is a monster room
             while (_player.CurrentRoom != null &&
-                    _player.CurrentRoom.MonstersInRoom.Count > 0 &&
-                    _player.Health > 0)
+               _player.CurrentRoom.MonstersInRoom.Count > 0 &&
+               _player.Health > 0)
             {
                 Monster monster = _player.CurrentRoom.MonstersInRoom[0];
-                bool playerWon = StartCombat(monster);
-                if (playerWon)
+                CombatResult combatResult = StartCombat(monster);
+
+                if (combatResult == CombatResult.PlayerVictory)
                 {
                     _player.CurrentRoom.MonstersInRoom.Remove(monster);
                 }
                 else
                 {
-                    return false;
+                    // If player was defeated OR won the whole game, signal back
+                    return combatResult;
                 }
             }
         }
@@ -813,7 +844,7 @@ public class Game
         {
             Console.WriteLine("You can't go that way.");
         }
-        return true;
+        return CombatResult.PlayerVictory;
     }
 
     private void DrawMap()
