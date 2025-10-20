@@ -1,5 +1,6 @@
 git ls-files | grep -E "\.(cs|md|json|csproj)$" | xargs -I {} sh -c 'echo "--- {} ---"; cat {}; echo ""' > project_snapshot.txt
 
+
 --- .vscode/settings.json ---
 {}
 --- Abilities/Ability.cs ---
@@ -31,7 +32,7 @@ public class DoubleStrike : Ability
     public override void Use(Character caster, Character target)
     {
         // Each hit does 75% of the caster's Dexterity as damage
-        int damagePerHit = (int)(caster.Stats["Dexterity"] * 0.75);
+        int damagePerHit = (int)(caster.GetTotalStrength() * 0.75);
 
         // First Hit
         target.Health -= damagePerHit;
@@ -84,7 +85,7 @@ public class PowerAttack : Ability
     public override void Use(Character caster, Character target)
     {
         // Power Attack deals 150% of the caster's Strength as damage
-        int damage = (int)(caster.Stats["Strength"] * 1.5);
+        int damage = (int)(caster.GetTotalStrength() * 1.5);
         target.Health -= damage;
         UIManager.SlowPrint($"{caster.Name} uses {Name}, dealing {damage} damage to {target.Name}!");
     }
@@ -200,6 +201,16 @@ public abstract class Character
             {"Intellect", intellect },
             {"Lifesteal", lifesteal}
         };
+    }
+
+    public virtual int GetTotalStrength()
+    {
+        return Stats["Strength"];
+    }
+
+    public virtual int GetTotalDefense()
+    {
+        return 0;
     }
 }
 --- Characters/CorrosiveSlime.cs ---
@@ -393,7 +404,7 @@ public class Player : Character
         Class = playerClass;
     }
 
-    public int GetTotalStrength()
+    public override int GetTotalStrength()
     {
         int totalStrength = Stats["Strength"];
 
@@ -409,7 +420,7 @@ public class Player : Character
         return totalStrength;
     }
 
-    public int GetTotalDefense()
+    public override int GetTotalDefense()
     {
         int totalDefense = 0;
 
@@ -425,60 +436,11 @@ public class Player : Character
         return totalDefense;
     }
 
-    public bool AddExperience(int experienceGained)
+    // In Player.cs
+    public void AddExperience(int experienceGained)
     {
         Experience += experienceGained;
-        bool leveledUp = false;
-
-        while (Experience >= ExperienceToNextLevel)
-        {
-            // Level up!
-            leveledUp = true;
-            Level++;
-            Experience -= ExperienceToNextLevel;
-
-            // --- Class-based stat increases ---
-            int healthIncrease = 0;
-            int strengthIncrease = 0;
-            int dexterityIncrease = 0;
-            int intellectIncrease = 0;
-            int energyIncrease = 0;
-
-            switch (Class)
-            {
-                case PlayerClass.Warrior:
-                    healthIncrease = 15;
-                    strengthIncrease = 3;
-                    dexterityIncrease = 1;
-                    intellectIncrease = 0;
-                    energyIncrease = 2;
-                    break;
-                case PlayerClass.Rogue:
-                    healthIncrease = 10;
-                    strengthIncrease = 1;
-                    dexterityIncrease = 3;
-                    intellectIncrease = 1;
-                    energyIncrease = 3;
-                    break;
-                case PlayerClass.Mage:
-                    healthIncrease = 8;
-                    strengthIncrease = 1;
-                    dexterityIncrease = 1;
-                    intellectIncrease = 3;
-                    energyIncrease = 5;
-                    break;
-            }
-
-            MaxHealth += healthIncrease;
-            MaxEnergy += energyIncrease;
-            Stats["Strength"] += strengthIncrease;
-            Stats["Dexterity"] += dexterityIncrease;
-            Stats["Intellect"] += intellectIncrease;
-            Health = MaxHealth;
-            Energy = MaxEnergy;
-            ExperienceToNextLevel = Level * 100;
-        }
-        return leveledUp;
+        UIManager.SlowPrint($"You gained {experienceGained} experience!");
     }
 }
 --- DESIGN.md ---
@@ -1595,7 +1557,6 @@ public class Game
                         UIManager.SlowPrint($"The {actingMonster.Name} attacks and misses!", ConsoleColor.Gray);
                     }
                 }
-                round++;
                 UIManager.SlowPrint($"\n---------END OF ROUND {round}-----------");
                 UIManager.SlowPrint($"{_player.Name}: {_player.Health}/{_player.MaxHealth}");
                 UIManager.SlowPrint($"Energy: {_player.Energy}/{_player.MaxEnergy}");
@@ -1603,6 +1564,7 @@ public class Game
                 UIManager.SlowPrint($"Energy: {monsterToFight.Energy}/{monsterToFight.MaxEnergy}");
                 UIManager.SlowPrint("\n----------------------------------");
             }
+            round++;
         }
 
         Console.WriteLine("\n--- BATTLE OVER ---");
@@ -1638,12 +1600,9 @@ public class Game
             }
 
             // Calculate experience and level up
-            bool leveledUp = _player.AddExperience(monsterToFight.ExperienceValue);
-            if (leveledUp)
-            {
-                UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
-                HandleTalentSelection();
-            }
+            _player.AddExperience(monsterToFight.ExperienceValue);
+            UIManager.SlowPrint($"Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
+            CheckForLevelUps();
             return CombatResult.PlayerVictory;
         }
         else
@@ -1837,6 +1796,67 @@ public class Game
                     Console.WriteLine("Invalid choice.");
                 }
             }
+        }
+    }
+    private void CheckForLevelUps()
+    {
+        // Loop as long as the player has enough XP to level up
+        while (_player.Experience >= _player.ExperienceToNextLevel)
+        {
+            _player.Level++;
+            _player.Experience -= _player.ExperienceToNextLevel;
+
+            UIManager.SlowPrint($"\n*** You have reached Level {_player.Level}! ***", ConsoleColor.Yellow);
+
+            // --- Class-based stat increases ---
+            int healthIncrease = 0;
+            int strengthIncrease = 0;
+            int dexterityIncrease = 0;
+            int intellectIncrease = 0;
+            int energyIncrease = 0;
+
+            switch (_player.Class)
+            {
+                case PlayerClass.Warrior:
+                    healthIncrease = 15;
+                    strengthIncrease = 3;
+                    dexterityIncrease = 1;
+                    intellectIncrease = 0;
+                    energyIncrease = 2;
+                    break;
+                case PlayerClass.Rogue:
+                    healthIncrease = 10;
+                    strengthIncrease = 1;
+                    dexterityIncrease = 3;
+                    intellectIncrease = 1;
+                    energyIncrease = 3;
+                    break;
+                case PlayerClass.Mage:
+                    healthIncrease = 8;
+                    strengthIncrease = 1;
+                    dexterityIncrease = 1;
+                    intellectIncrease = 3;
+                    energyIncrease = 5;
+                    break;
+            }
+            _player.MaxHealth += healthIncrease;
+            _player.MaxEnergy += energyIncrease;
+            _player.Stats["Strength"] += strengthIncrease;
+            _player.Stats["Dexterity"] += dexterityIncrease;
+            _player.Stats["Intellect"] += intellectIncrease;
+            _player.Health = _player.MaxHealth;
+            _player.Energy = _player.MaxEnergy;
+            _player.ExperienceToNextLevel = _player.Level * 100;
+
+            UIManager.SlowPrint($"Max Health increased by {healthIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Max Energy increased by {energyIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Strength increased by {strengthIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Dexterity increased by {dexterityIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Intellect increased by {intellectIncrease}.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Recovered to full Health and Energy.", ConsoleColor.DarkYellow);
+            UIManager.SlowPrint($"Experience to next level: {_player.ExperienceToNextLevel}", ConsoleColor.DarkYellow);
+
+            HandleTalentSelection();
         }
     }
 }
