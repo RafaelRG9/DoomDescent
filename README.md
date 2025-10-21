@@ -41,7 +41,7 @@ If you prefer, you can clone the repository and run the game using the .NET SDK.
 ## Gameplay Commands
 
 * **Movement:** `north`, `south`, `east`, `west`
-* **Actions:** `look`, `take [item]`, `drop [item]`, `equip [item]`, `use [item]`
+* **Actions:** `look`, `take [item]`, `drop [item]`, `equip [item]`, `use [item]`, `inspect [item]` 
 * **Character:** `stats`, `inventory`, `map`
 * **Combat:** `attack`, `defend`, `[ability name]`
 * **Other:** `craft`, `drink`, `descend`
