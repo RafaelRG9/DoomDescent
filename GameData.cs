@@ -12,6 +12,7 @@ public class GameData
     public List<CraftingRecipe> AvailableRecipes { get; private set; }
     public Dictionary<PlayerClass, Dictionary<int, List<Modifier>>> ClassTalents { get; private set; }
     public List<Modifier> FountainBlessings { get; private set; }
+    public Dictionary<Rarity, List<Modifier>> SkillPoolByRarity { get; private set; }
 
     public GameData()
     {
@@ -22,6 +23,7 @@ public class GameData
         AvailableRecipes = new List<CraftingRecipe>();
         ClassTalents = new Dictionary<PlayerClass, Dictionary<int, List<Modifier>>>();
         FountainBlessings = new List<Modifier>();
+        SkillPoolByRarity = new Dictionary<Rarity, List<Modifier>>();
 
         // --- CRAFTED ITEMS AND MATERIALS ---
 
@@ -88,7 +90,7 @@ public class GameData
         MasterBossTable.Add(new Boss(dragonClaw)); // Final Boss
 
 
-        // --- CRAFTING TABLE ---
+        // --- CRAFTING RECIPES TABLE ---
         CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>
         {
             { goblinHide, 2 }
@@ -99,6 +101,22 @@ public class GameData
         FountainBlessings.Add(new StatModifier("Blessing of Strength", "You feel a surge of power! +2 Strength", Rarity.Heroic, "Strength", 2, "null", 0));
         FountainBlessings.Add(new StatModifier("Blessing of Agility", "You feel lighter on your feet! +2 Dexterity", Rarity.Heroic, "Dexterity", 2, "null", 0));
         FountainBlessings.Add(new StatModifier("Blessing of Intellect", "Your mind feels clearer! +2 Intellect", Rarity.Heroic, "Intellect", 2, "null", 0));
+
+        // --- SKILLS ---
+
+        // --- COMMON SKILLS
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Savage Strikes", "A small boost to your raw power. +1 Strength.", Rarity.Common, "Strength", 1, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Quick Reflexes", "You feel a bit faster. +1 Dexterity.", Rarity.Common, "Dexterity", 1, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Arcane Focus", "Your mind sharpens slightly. +1 Intellect.", Rarity.Common, "Intellect", 1, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Minor Vitality", "You feel healthier. +5 Max Health.", Rarity.Common, "MaxHealth", 5, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Toughness", "Your skin thickens. +1 Base Defense (coming soon!).", Rarity.Common, "MaxHealth", 1, "null", 0));
+
+        // --- UNCOMMON SKILLS
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Brutality", "You focus on overwhelming force. +3 Strength.", Rarity.Uncommon, "Strength", 3, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Agility", "You become much more nimble. +3 Dexterity.", Rarity.Uncommon, "Dexterity", 3, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Brilliance", "Your mind expands. +3 Intellect.", Rarity.Uncommon, "Intellect", 3, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Major Vitality", "You feel truly robust. +15 Max Health.", Rarity.Uncommon, "MaxHealth", 15, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Adrenaline", "You feel the rush of combat. +5 Max Energy.", Rarity.Uncommon, "MaxEnergy", 5, "null", 0));
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
         // --- TALENTS ---

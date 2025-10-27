@@ -715,6 +715,8 @@ public class Game
                 _player.Inventory.Add(monsterToFight.Loot);
             }
 
+            HandleSkillSelection();
+
             // Calculate experience and level up
             _player.AddExperience(monsterToFight.ExperienceValue);
             UIManager.SlowPrint($"Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
@@ -973,6 +975,113 @@ public class Game
             UIManager.SlowPrint($"Experience to next level: {_player.ExperienceToNextLevel}", ConsoleColor.DarkYellow);
 
             HandleTalentSelection();
+        }
+    }
+
+    private Rarity GetRandomRarity()
+    {
+        int roll = _random.Next(1, 101); // Roll 1-100
+        if (roll <= 60) return Rarity.Common;    // 60% chance
+        if (roll <= 90) return Rarity.Uncommon;  // 30% chance
+        if (roll <= 98) return Rarity.Heroic;    // 8% chance
+        if (roll <= 100) return Rarity.Epic;     // 2% chance
+
+        return Rarity.Common; // Failsafe
+    }
+
+    private Modifier GetOneSkillChoice(List<Modifier>? excludeList)
+    {
+        int attempts = 0; // Failsafe to prevent an infinite loop
+        while (attempts < 50)
+        {
+            // Roll for rarity
+            Rarity rarity = GetRandomRarity();
+
+            // Failsafe "dropdown" logic. If we roll Epic but have no Epic skills,
+            // this logic will try Heroic, then Uncommon, etc., until it finds a pool.
+            while (_gameData.SkillPoolByRarity[rarity].Count == 0)
+            {
+                if (rarity == Rarity.Common) return _gameData.SkillPoolByRarity[Rarity.Common][0]; // Should never happen, but just in case
+                if (rarity == Rarity.Uncommon) rarity = Rarity.Common;
+                if (rarity == Rarity.Heroic) rarity = Rarity.Uncommon;
+                if (rarity == Rarity.Epic) rarity = Rarity.Heroic;
+                if (rarity == Rarity.Legendary) rarity = Rarity.Epic;
+            }
+
+            // Get the list of skills for that rarity
+            List<Modifier> pool = _gameData.SkillPoolByRarity[rarity];
+
+            // Filter out any skills from the excludeList
+            var availablePool = pool.Where(m => excludeList == null || !excludeList.Contains(m)).ToList();
+
+            // If we have any valid skills left, pick one and return it!
+            if (availablePool.Count > 0)
+            {
+                return availablePool[_random.Next(availablePool.Count)];
+            }
+
+            // If we failed (e.g., we rolled Common but the only Common skill
+            // was already in the excludeList), we loop and try again.
+            attempts++;
+        }
+
+        // Failsafe: If we failed 50 times, just return a random Common skill.
+        return _gameData.SkillPoolByRarity[Rarity.Common][_random.Next(_gameData.SkillPoolByRarity[Rarity.Common].Count)];
+    }
+
+    private void HandleSkillSelection()
+    {
+        // Check if we even have skills to offer.
+        int totalSkillCount = _gameData.SkillPoolByRarity.Sum(kvp => kvp.Value.Count);
+        if (totalSkillCount == 0)
+        {
+            UIManager.SlowPrint("Error: No skills defined in GameData.", ConsoleColor.Red);
+            return;
+        }
+
+        // Build our list of 3 unique choices.
+        List<Modifier> choices = new List<Modifier>();
+
+        // Get choice 1, excluding nothing.
+        Modifier choice1 = GetOneSkillChoice(null);
+        choices.Add(choice1);
+
+        // Get choice 2, excluding choice 1.
+        // We add this check in case we have < 3 total skills defined.
+        if (totalSkillCount > 1)
+        {
+            Modifier choice2 = GetOneSkillChoice(new List<Modifier> { choice1 });
+            choices.Add(choice2);
+
+
+            // Get choice 3, excluding choices 1 and 2.
+            if (totalSkillCount > 2)
+            {
+                Modifier choice3 = GetOneSkillChoice(new List<Modifier> { choice1, choice2 });
+                choices.Add(choice3);
+            }
+        }
+
+        // Display choices and get input from the player.
+        while (true)
+        {
+            UIManager.DisplaySkillChoices(choices);
+            Console.Write("> ");
+            string? input = Console.ReadLine();
+
+            if (int.TryParse(input, out int choice) && choice > 0 && choice <= choices.Count)
+            {
+                // Get the chosen modifier
+                Modifier chosenSkill = choices[choice - 1];
+
+                // Apply it to the player
+                chosenSkill.Apply(_player);
+                break; // Exit the selection loop
+            }
+            else
+            {
+                Console.WriteLine("Invalid choice.");
+            }
         }
     }
 }

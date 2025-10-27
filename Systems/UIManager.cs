@@ -59,4 +59,26 @@ public static class UIManager
             Console.WriteLine("\nYour inventory is empty");
         }
     }
+
+    public static void DisplaySkillChoices(List<Modifier> choices)
+    {
+        SlowPrint("\nYou've learned from the fight! Choose an upgrade:", ConsoleColor.Cyan);
+        for (int i = 0; i < choices.Count; i++)
+        {
+            // Set color based on rarity
+            ConsoleColor rarityColor = choices[i].Rarity switch
+            {
+                Rarity.Common => ConsoleColor.Gray,
+                Rarity.Uncommon => ConsoleColor.Green,
+                Rarity.Heroic => ConsoleColor.Blue,
+                Rarity.Epic => ConsoleColor.Magenta,
+                Rarity.Legendary => ConsoleColor.DarkYellow,
+                _ => ConsoleColor.White
+            };
+
+            Console.ForegroundColor = rarityColor;
+            Console.WriteLine($"{i + 1}. {choices[i].Name} - {choices[i].Description}");
+            Console.ResetColor();
+        }
+    }
 }
