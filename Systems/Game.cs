@@ -147,25 +147,7 @@ public class Game
 
                 case "stats":
                 case "char":
-                    Console.WriteLine("\n--- Character Stats ---");
-                    Console.WriteLine($" Name: {_player.Name}");
-                    Console.WriteLine($" Class: {_player.Class}");
-                    Console.WriteLine($" Level: {_player.Level}");
-                    Console.WriteLine($" Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
-                    Console.WriteLine($" Health: {_player.Health} / {_player.MaxHealth}");
-                    Console.WriteLine($" Energy: {_player.Energy} / {_player.MaxEnergy}");
-                    Console.WriteLine("-----------------------");
-                    Console.WriteLine(" Attributes:");
-                    foreach (var stat in _player.Stats)
-                    {
-                        Console.WriteLine($" - {stat.Key}: {stat.Value}");
-                    }
-                    Console.WriteLine(" Abilities:");
-                    foreach (var ability in _player.Abilities)
-                    {
-                        Console.WriteLine($" - {ability.Name}(Cost: {ability.EnergyCost}): {ability.Description}");
-                    }
-                    Console.WriteLine("-----------------------");
+                    UIManager.DisplayStats(_player);
                     break;
 
                 case "map":
@@ -175,19 +157,7 @@ public class Game
 
                 case "inventory":
                 case "i":
-                    // display player inventory
-                    if (_player.Inventory.Any())
-                    {
-                        Console.WriteLine("\nInventory");
-                        foreach (var item in _player.Inventory)
-                        {
-                            Console.WriteLine($"- {item.Name}");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("\nYour inventory is empty");
-                    }
+                    UIManager.DisplayInventory(_player);
                     break;
 
                 case "examine":
