@@ -109,7 +109,10 @@ public class GameData
         SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Quick Reflexes", "You feel a bit faster. +1 Dexterity.", Rarity.Common, "Dexterity", 1, "null", 0));
         SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Arcane Focus", "Your mind sharpens slightly. +1 Intellect.", Rarity.Common, "Intellect", 1, "null", 0));
         SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Minor Vitality", "You feel healthier. +5 Max Health.", Rarity.Common, "MaxHealth", 5, "null", 0));
-        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Toughness", "Your skin thickens. +1 Base Defense (coming soon!).", Rarity.Common, "MaxHealth", 1, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Toughness", "Your skin thickens. +1 Base Defense (coming soon!).", Rarity.Common, "MaxHealth", 1, "null", 0)); // TODO: add defense stat modifier
+        SkillPoolByRarity[Rarity.Common].Add(new AbilityGrantModifier("Mend", "Its a heal, big woop. Heal for 300% Intellect" , Rarity.Common, new Mend()));
+        SkillPoolByRarity[Rarity.Common].Add(new AbilityGrantModifier("Shield Bash", "Hit with your shield, then go into defense stance" , Rarity.Common, new ShieldBash()));
+        SkillPoolByRarity[Rarity.Common].Add(new AbilityGrantModifier("Blood Pact", "Need Energy? trade some health for it!. costs 10 health and restores 5 energy" , Rarity.Common, new BloodPact()));
 
         // --- UNCOMMON SKILLS
         SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Brutality", "You focus on overwhelming force. +3 Strength.", Rarity.Uncommon, "Strength", 3, "null", 0));
@@ -117,6 +120,27 @@ public class GameData
         SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Brilliance", "Your mind expands. +3 Intellect.", Rarity.Uncommon, "Intellect", 3, "null", 0));
         SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Major Vitality", "You feel truly robust. +15 Max Health.", Rarity.Uncommon, "MaxHealth", 15, "null", 0));
         SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Adrenaline", "You feel the rush of combat. +5 Max Energy.", Rarity.Uncommon, "MaxEnergy", 5, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new AbilityGrantModifier("Reckless Swing", "Strike hard, will hurt you too!" , Rarity.Uncommon, new RecklessSwing()));
+
+        // --- HEROIC SKILLS
+        SkillPoolByRarity[Rarity.Heroic].Add(new StatModifier("Berserker's Rage", "Boiling blood, hit things harder!. +5 Strength, -10 Max Health", Rarity.Heroic, "Strength", 5, "MaxHealth", 10));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Execute", "Go for the jugular!, massive damage on low health target" , Rarity.Heroic, new Execute()));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Chaos Bolt", "You can deal massive damage, or barely tickle them. Deals 100% to 500% Intellect randomly" , Rarity.Heroic, new ChaosBolt()));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Meditate", "Assume your favorite aesthetic pose. Restore 20 Energy and enter defensive stance" , Rarity.Heroic, new Meditate()));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Wild Magic", "Could damage the opponent, heal you, or backfire too!. Random effect every time!" , Rarity.Heroic, new WildMagic()));
+
+        // --- EPIC SKILLS
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Drain Life", "Become a vampire, heal the amount of damage dealt" , Rarity.Epic, new DrainLife()));
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Vengeance", "You enrage at the sight of your own blood, Deals more damage the more health you are missing" , Rarity.Epic, new Vengeance()));
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Body Slam", "You are chunky, use it in your favor! Deals damage equal to 33.333333(repeating of course)% of your Max health" , Rarity.Epic, new BodySlam()));
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Coin Toss", "Heads you die, Tails I die. deals massive or laughable damage 50/50" , Rarity.Epic, new CoinToss()));
+
+        // --- LEGENDARY SKILLS
+        SkillPoolByRarity[Rarity.Legendary].Add(new AbilityGrantModifier("Second Wind", "Take an adrenaline shot and stay in the battle. Fully Restores Health and Energy(can only be used once per battle)(Not yet implemented)" , Rarity.Legendary, new SecondWind()));// TODO: implement a limit on how mnay can be used per battle
+
+        // --- UNIQUE SKILLS
+        SkillPoolByRarity[Rarity.Unique].Add(new AbilityGrantModifier("Armageddon", "You turn your energy into a nuke. 5 damage per mana used, uses all mana" , Rarity.Unique, new Armageddon()));
+        SkillPoolByRarity[Rarity.Unique].Add(new AbilityGrantModifier("Soul Sever", "You got the lych's Phylactery, every time you open it the opponent loses half their life" , Rarity.Unique, new SoulSever()));
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
         // --- TALENTS ---

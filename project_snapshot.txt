@@ -526,6 +526,7 @@ public class GameData
     public List<CraftingRecipe> AvailableRecipes { get; private set; }
     public Dictionary<PlayerClass, Dictionary<int, List<Modifier>>> ClassTalents { get; private set; }
     public List<Modifier> FountainBlessings { get; private set; }
+    public Dictionary<Rarity, List<Modifier>> SkillPoolByRarity { get; private set; }
 
     public GameData()
     {
@@ -536,6 +537,7 @@ public class GameData
         AvailableRecipes = new List<CraftingRecipe>();
         ClassTalents = new Dictionary<PlayerClass, Dictionary<int, List<Modifier>>>();
         FountainBlessings = new List<Modifier>();
+        SkillPoolByRarity = new Dictionary<Rarity, List<Modifier>>();
 
         // --- CRAFTED ITEMS AND MATERIALS ---
 
@@ -602,7 +604,7 @@ public class GameData
         MasterBossTable.Add(new Boss(dragonClaw)); // Final Boss
 
 
-        // --- CRAFTING TABLE ---
+        // --- CRAFTING RECIPES TABLE ---
         CraftingRecipe armorRecipe = new CraftingRecipe(leatherArmor, new Dictionary<Item, int>
         {
             { goblinHide, 2 }
@@ -613,6 +615,46 @@ public class GameData
         FountainBlessings.Add(new StatModifier("Blessing of Strength", "You feel a surge of power! +2 Strength", Rarity.Heroic, "Strength", 2, "null", 0));
         FountainBlessings.Add(new StatModifier("Blessing of Agility", "You feel lighter on your feet! +2 Dexterity", Rarity.Heroic, "Dexterity", 2, "null", 0));
         FountainBlessings.Add(new StatModifier("Blessing of Intellect", "Your mind feels clearer! +2 Intellect", Rarity.Heroic, "Intellect", 2, "null", 0));
+
+        // --- SKILLS ---
+
+        // --- COMMON SKILLS
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Savage Strikes", "A small boost to your raw power. +1 Strength.", Rarity.Common, "Strength", 1, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Quick Reflexes", "You feel a bit faster. +1 Dexterity.", Rarity.Common, "Dexterity", 1, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Arcane Focus", "Your mind sharpens slightly. +1 Intellect.", Rarity.Common, "Intellect", 1, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Minor Vitality", "You feel healthier. +5 Max Health.", Rarity.Common, "MaxHealth", 5, "null", 0));
+        SkillPoolByRarity[Rarity.Common].Add(new StatModifier("Toughness", "Your skin thickens. +1 Base Defense (coming soon!).", Rarity.Common, "MaxHealth", 1, "null", 0)); // TODO: add defense stat modifier
+        SkillPoolByRarity[Rarity.Common].Add(new AbilityGrantModifier("Mend", "Its a heal, big woop. Heal for 300% Intellect" , Rarity.Common, new Mend()));
+        SkillPoolByRarity[Rarity.Common].Add(new AbilityGrantModifier("Shield Bash", "Hit with your shield, then go into defense stance" , Rarity.Common, new ShieldBash()));
+        SkillPoolByRarity[Rarity.Common].Add(new AbilityGrantModifier("Blood Pact", "Need Energy? trade some health for it!. costs 10 health and restores 5 energy" , Rarity.Common, new BloodPact()));
+
+        // --- UNCOMMON SKILLS
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Brutality", "You focus on overwhelming force. +3 Strength.", Rarity.Uncommon, "Strength", 3, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Agility", "You become much more nimble. +3 Dexterity.", Rarity.Uncommon, "Dexterity", 3, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Brilliance", "Your mind expands. +3 Intellect.", Rarity.Uncommon, "Intellect", 3, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Major Vitality", "You feel truly robust. +15 Max Health.", Rarity.Uncommon, "MaxHealth", 15, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new StatModifier("Adrenaline", "You feel the rush of combat. +5 Max Energy.", Rarity.Uncommon, "MaxEnergy", 5, "null", 0));
+        SkillPoolByRarity[Rarity.Uncommon].Add(new AbilityGrantModifier("Reckless Swing", "Strike hard, will hurt you too!" , Rarity.Uncommon, new RecklessSwing()));
+
+        // --- HEROIC SKILLS
+        SkillPoolByRarity[Rarity.Heroic].Add(new StatModifier("Berserker's Rage", "Boiling blood, hit things harder!. +5 Strength, -10 Max Health", Rarity.Heroic, "Strength", 5, "MaxHealth", 10));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Execute", "Go for the yugular!, massive damage on low health target" , Rarity.Heroic, new Execute()));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Chaos Bolt", "You can deal massive damage, or barely tickle them. Deals 100% to 500% Intellect randomly" , Rarity.Heroic, new ChaosBolt()));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Medidate", "Assume your favorite aesthetic pose. Restore 20 Energy and enter defensivce stance" , Rarity.Heroic, new Meditate()));
+        SkillPoolByRarity[Rarity.Heroic].Add(new AbilityGrantModifier("Wild Magic", "Could damage the opponent, heal you, or backfire too!. Random effect every time!" , Rarity.Heroic, new WildMagic()));
+
+        // --- EPIC SKILLS
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Drain Life", "Become a vampire, heal the amount of damage dealt" , Rarity.Epic, new DrainLife()));
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Vengance", "You enrage at the sight of your own blood, Deals more damage the more health you are missing" , Rarity.Epic, new Vengeance()));
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Body Slam", "You are chunky, use it in your favor! Deals damage equal to 33.333333(repeating of course)% of your Max health" , Rarity.Epic, new BodySlam()));
+        SkillPoolByRarity[Rarity.Epic].Add(new AbilityGrantModifier("Coin Toss", "Heads you die, Tails I die. deals massive or laughable damage 50/50" , Rarity.Epic, new CoinToss()));
+
+        // --- LEGENDARY SKILLS
+        SkillPoolByRarity[Rarity.Legendary].Add(new AbilityGrantModifier("Second Wind", "Take an adrenaline shot and stay in the battle. Fully Restores Health and Energy(can only be used once per battle)(Not yet implemented)" , Rarity.Legendary, new SecondWind()));// TODO: implement a limit on how mnay can be used per battle
+
+        // --- UNIQUE SKILLS
+        SkillPoolByRarity[Rarity.Unique].Add(new AbilityGrantModifier("Armageddon", "You turn your energy into a nuke. 5 damage per mana used, uses all mana" , Rarity.Unique, new Armageddon()));
+        SkillPoolByRarity[Rarity.Unique].Add(new AbilityGrantModifier("Soul Sever", "You got the lych's Phylacthery, every time you open it the opponent looses half their life" , Rarity.Unique, new SoulSever()));
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
         // --- TALENTS ---
@@ -1034,25 +1076,7 @@ public class Game
 
                 case "stats":
                 case "char":
-                    Console.WriteLine("\n--- Character Stats ---");
-                    Console.WriteLine($" Name: {_player.Name}");
-                    Console.WriteLine($" Class: {_player.Class}");
-                    Console.WriteLine($" Level: {_player.Level}");
-                    Console.WriteLine($" Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
-                    Console.WriteLine($" Health: {_player.Health} / {_player.MaxHealth}");
-                    Console.WriteLine($" Energy: {_player.Energy} / {_player.MaxEnergy}");
-                    Console.WriteLine("-----------------------");
-                    Console.WriteLine(" Attributes:");
-                    foreach (var stat in _player.Stats)
-                    {
-                        Console.WriteLine($" - {stat.Key}: {stat.Value}");
-                    }
-                    Console.WriteLine(" Abilities:");
-                    foreach (var ability in _player.Abilities)
-                    {
-                        Console.WriteLine($" - {ability.Name}(Cost: {ability.EnergyCost}): {ability.Description}");
-                    }
-                    Console.WriteLine("-----------------------");
+                    UIManager.DisplayStats(_player);
                     break;
 
                 case "map":
@@ -1062,19 +1086,7 @@ public class Game
 
                 case "inventory":
                 case "i":
-                    // display player inventory
-                    if (_player.Inventory.Any())
-                    {
-                        Console.WriteLine("\nInventory");
-                        foreach (var item in _player.Inventory)
-                        {
-                            Console.WriteLine($"- {item.Name}");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("\nYour inventory is empty");
-                    }
+                    UIManager.DisplayInventory(_player);
                     break;
 
                 case "examine":
@@ -1632,6 +1644,8 @@ public class Game
                 _player.Inventory.Add(monsterToFight.Loot);
             }
 
+            HandleSkillSelection();
+
             // Calculate experience and level up
             _player.AddExperience(monsterToFight.ExperienceValue);
             UIManager.SlowPrint($"Experience: {_player.Experience} / {_player.ExperienceToNextLevel}");
@@ -1892,6 +1906,113 @@ public class Game
             HandleTalentSelection();
         }
     }
+
+    private Rarity GetRandomRarity()
+    {
+        int roll = _random.Next(1, 101); // Roll 1-100
+        if (roll <= 60) return Rarity.Common;    // 60% chance
+        if (roll <= 90) return Rarity.Uncommon;  // 30% chance
+        if (roll <= 98) return Rarity.Heroic;    // 8% chance
+        if (roll <= 100) return Rarity.Epic;     // 2% chance
+
+        return Rarity.Common; // Failsafe
+    }
+
+    private Modifier GetOneSkillChoice(List<Modifier>? excludeList)
+    {
+        int attempts = 0; // Failsafe to prevent an infinite loop
+        while (attempts < 50)
+        {
+            // Roll for rarity
+            Rarity rarity = GetRandomRarity();
+
+            // Failsafe "dropdown" logic. If we roll Epic but have no Epic skills,
+            // this logic will try Heroic, then Uncommon, etc., until it finds a pool.
+            while (_gameData.SkillPoolByRarity[rarity].Count == 0)
+            {
+                if (rarity == Rarity.Common) return _gameData.SkillPoolByRarity[Rarity.Common][0]; // Should never happen, but just in case
+                if (rarity == Rarity.Uncommon) rarity = Rarity.Common;
+                if (rarity == Rarity.Heroic) rarity = Rarity.Uncommon;
+                if (rarity == Rarity.Epic) rarity = Rarity.Heroic;
+                if (rarity == Rarity.Legendary) rarity = Rarity.Epic;
+            }
+
+            // Get the list of skills for that rarity
+            List<Modifier> pool = _gameData.SkillPoolByRarity[rarity];
+
+            // Filter out any skills from the excludeList
+            var availablePool = pool.Where(m => excludeList == null || !excludeList.Contains(m)).ToList();
+
+            // If we have any valid skills left, pick one and return it!
+            if (availablePool.Count > 0)
+            {
+                return availablePool[_random.Next(availablePool.Count)];
+            }
+
+            // If we failed (e.g., we rolled Common but the only Common skill
+            // was already in the excludeList), we loop and try again.
+            attempts++;
+        }
+
+        // Failsafe: If we failed 50 times, just return a random Common skill.
+        return _gameData.SkillPoolByRarity[Rarity.Common][_random.Next(_gameData.SkillPoolByRarity[Rarity.Common].Count)];
+    }
+
+    private void HandleSkillSelection()
+    {
+        // Check if we even have skills to offer.
+        int totalSkillCount = _gameData.SkillPoolByRarity.Sum(kvp => kvp.Value.Count);
+        if (totalSkillCount == 0)
+        {
+            UIManager.SlowPrint("Error: No skills defined in GameData.", ConsoleColor.Red);
+            return;
+        }
+
+        // Build our list of 3 unique choices.
+        List<Modifier> choices = new List<Modifier>();
+
+        // Get choice 1, excluding nothing.
+        Modifier choice1 = GetOneSkillChoice(null);
+        choices.Add(choice1);
+
+        // Get choice 2, excluding choice 1.
+        // We add this check in case we have < 3 total skills defined.
+        if (totalSkillCount > 1)
+        {
+            Modifier choice2 = GetOneSkillChoice(new List<Modifier> { choice1 });
+            choices.Add(choice2);
+
+
+            // Get choice 3, excluding choices 1 and 2.
+            if (totalSkillCount > 2)
+            {
+                Modifier choice3 = GetOneSkillChoice(new List<Modifier> { choice1, choice2 });
+                choices.Add(choice3);
+            }
+        }
+
+        // Display choices and get input from the player.
+        while (true)
+        {
+            UIManager.DisplaySkillChoices(choices);
+            Console.Write("> ");
+            string? input = Console.ReadLine();
+
+            if (int.TryParse(input, out int choice) && choice > 0 && choice <= choices.Count)
+            {
+                // Get the chosen modifier
+                Modifier chosenSkill = choices[choice - 1];
+
+                // Apply it to the player
+                chosenSkill.Apply(_player);
+                break; // Exit the selection loop
+            }
+            else
+            {
+                Console.WriteLine("Invalid choice.");
+            }
+        }
+    }
 }
 --- Systems/Modifier.cs ---
 namespace csharp_roguelike_rpg.Systems;
@@ -1974,7 +2095,10 @@ public class StatModifier : Modifier
     }
 }
 --- Systems/UIManager.cs ---
+using csharp_roguelike_rpg.Characters;
+
 namespace csharp_roguelike_rpg.Systems;
+
 public static class UIManager
 {
     public static void SlowPrint(string text, ConsoleColor? color = null)
@@ -1992,6 +2116,67 @@ public static class UIManager
 
         Console.ResetColor();
         Console.WriteLine();
+    }
+
+    public static void DisplayStats(Player player)
+    {
+        Console.WriteLine("\n--- Character Stats ---");
+        Console.WriteLine($" Name: {player.Name}");
+        Console.WriteLine($" Class: {player.Class}");
+        Console.WriteLine($" Level: {player.Level}");
+        Console.WriteLine($" Experience: {player.Experience} / {player.ExperienceToNextLevel}");
+        Console.WriteLine($" Health: {player.Health} / {player.MaxHealth}");
+        Console.WriteLine($" Energy: {player.Energy} / {player.MaxEnergy}");
+        Console.WriteLine("-----------------------");
+        Console.WriteLine(" Attributes:");
+        foreach (var stat in player.Stats)
+        {
+            Console.WriteLine($" - {stat.Key}: {stat.Value}");
+        }
+        Console.WriteLine(" Abilities:");
+        foreach (var ability in player.Abilities)
+        {
+            Console.WriteLine($" - {ability.Name}(Cost: {ability.EnergyCost}): {ability.Description}");
+        }
+        Console.WriteLine("-----------------------");
+    }
+
+    public static void DisplayInventory(Player player)
+    {
+        if (player.Inventory.Any())
+        {
+            Console.WriteLine("\nInventory");
+            foreach (var item in player.Inventory)
+            {
+                Console.WriteLine($"- {item.Name}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("\nYour inventory is empty");
+        }
+    }
+
+    public static void DisplaySkillChoices(List<Modifier> choices)
+    {
+        SlowPrint("\nYou've learned from the fight! Choose an upgrade:", ConsoleColor.Cyan);
+        for (int i = 0; i < choices.Count; i++)
+        {
+            // Set color based on rarity
+            ConsoleColor rarityColor = choices[i].Rarity switch
+            {
+                Rarity.Common => ConsoleColor.Gray,
+                Rarity.Uncommon => ConsoleColor.Green,
+                Rarity.Heroic => ConsoleColor.Blue,
+                Rarity.Epic => ConsoleColor.Magenta,
+                Rarity.Legendary => ConsoleColor.DarkYellow,
+                _ => ConsoleColor.White
+            };
+
+            Console.ForegroundColor = rarityColor;
+            Console.WriteLine($"{i + 1}. {choices[i].Name} - {choices[i].Description}");
+            Console.ResetColor();
+        }
     }
 }
 --- World/DungeonGenerator.cs ---
